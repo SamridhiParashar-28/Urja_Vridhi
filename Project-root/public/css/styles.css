@@ -1,0 +1,318 @@
+/* ── CSS variables ───────────────────────────────────────── */
+:root {
+  --bg:        #000000;
+  --card-bg:   #001100;
+  --text:      #00ff41;
+  --text-light:#00cc33;
+  --accent:    #00ff41;
+  --accent2:   #00cc33;
+  --glow:      rgba(0, 255, 65, 0.35);
+  --border:    #00aa33;
+  --cursor-border: #00aa33;
+  --cursor-bg: #00ff41;
+  --success:   #00ff41;
+  --danger:    #ff3366;
+  --btn-hover: #00cc33;
+}
+
+[data-theme="light"] {
+  --bg:        #e0f0ff;
+  --card-bg:   #ffffff;
+  --text:      #0a2a4a;
+  --text-light:#2c446e;
+  --accent:    #4a9cff;
+  --accent2:   #2b7fe6;
+  --glow:      rgba(74, 156, 255, 0.22);
+  --border:    #b8d8ff;
+  --cursor-border: #1e6ac9;
+  --cursor-bg: #4a9cff;
+  --success:   #2b7fe6;
+  --danger:    #ff6b7a;
+  --btn-hover: #2b7fe6;
+}
+
+/* ── Reset ───────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ── Base body ───────────────────────────────────────────── */
+/*
+ * IMPORTANT: body must NOT use display:grid + place-items:center here
+ * because the dashboard layout (app-container) overrides that and it
+ * would cause the sidebar to collapse.
+ * The login/register pages add .login-page-body on <body> to centre themselves.
+ */
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Courier New', Courier, monospace;
+  min-height: 100dvh;
+  line-height: 1.4;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    var(--glow) 1px,
+    transparent 2px
+  );
+  background-size: 100% 4px;
+  cursor: none;
+}
+
+/* ── Custom cursor ── */
+.cursor {
+  width: 12px; height: 12px;
+  border: 1.5px solid var(--cursor-border);
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 99999;
+  transition: transform 0.15s, opacity 0.15s, border-color 0.3s;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.cursor-dot {
+  width: 4px; height: 4px;
+  background: var(--cursor-bg);
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 99999;
+  transform: translate(-50%, -50%);
+}
+
+/* ── Interactive Cursors ── */
+[data-theme="dark"] a, [data-theme="dark"] button, [data-theme="dark"] input, [data-theme="dark"] label, [data-theme="dark"] .password-toggle {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 16 16' shape-rendering='crispEdges'%3E%3Crect x='5' y='1' width='2' height='2' fill='%23000'/%3E%3Crect x='5' y='3' width='2' height='2' fill='%23000'/%3E%3Crect x='5' y='5' width='2' height='2' fill='%23000'/%3E%3Crect x='5' y='7' width='2' height='2' fill='%23000'/%3E%3Crect x='5' y='9' width='2' height='2' fill='%23000'/%3E%3Crect x='7' y='5' width='2' height='2' fill='%23000'/%3E%3Crect x='7' y='7' width='2' height='2' fill='%23000'/%3E%3Crect x='7' y='9' width='2' height='2' fill='%23000'/%3E%3Crect x='9' y='7' width='2' height='2' fill='%23000'/%3E%3Crect x='9' y='9' width='2' height='2' fill='%23000'/%3E%3Crect x='11' y='7' width='2' height='2' fill='%23000'/%3E%3Crect x='11' y='9' width='2' height='2' fill='%23000'/%3E%3Crect x='3' y='11' width='10' height='2' fill='%23000'/%3E%3Crect x='3' y='13' width='10' height='2' fill='%23000'/%3E%3Crect x='3' y='15' width='10' height='2' fill='%23000'/%3E%3Crect x='4' y='0' width='2' height='2' fill='%2300aa33'/%3E%3Crect x='4' y='2' width='2' height='2' fill='%2300aa33'/%3E%3Crect x='4' y='4' width='2' height='2' fill='%2300aa33'/%3E%3Crect x='4' y='6' width='2' height='2' fill='%2300aa33'/%3E%3Crect x='4' y='8' width='2' height='2' fill='%2300aa33'/%3E%3Crect x='6' y='4' width='2' height='2' fill='%2300aa33'/%3E%3Crect x='6' y='6' width='2' height='2' fill='%2300aa33'/%3E%3Crect x='6' y='8' width='2' height='2' fill='%2300aa33'/%3E%3Crect x='8' y='6' width='2' height='2' fill='%2300aa33'/%3E%3Crect x='8' y='8' width='2' height='2' fill='%2300aa33'/%3E%3Crect x='10' y='6' width='2' height='2' fill='%2300aa33'/%3E%3Crect x='10' y='8' width='2' height='2' fill='%2300aa33'/%3E%3Crect x='2' y='10' width='10' height='2' fill='%2300aa33'/%3E%3Crect x='2' y='12' width='10' height='2' fill='%2300aa33'/%3E%3Crect x='2' y='14' width='10' height='2' fill='%2300aa33'/%3E%3C/svg%3E") 4 0, pointer;
+}
+[data-theme="light"] a, [data-theme="light"] button, [data-theme="light"] input, [data-theme="light"] label, [data-theme="light"] .password-toggle {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 16 16' shape-rendering='crispEdges'%3E%3Crect x='5' y='1' width='2' height='2' fill='%23fff'/%3E%3Crect x='5' y='3' width='2' height='2' fill='%23fff'/%3E%3Crect x='5' y='5' width='2' height='2' fill='%23fff'/%3E%3Crect x='5' y='7' width='2' height='2' fill='%23fff'/%3E%3Crect x='5' y='9' width='2' height='2' fill='%23fff'/%3E%3Crect x='7' y='5' width='2' height='2' fill='%23fff'/%3E%3Crect x='7' y='7' width='2' height='2' fill='%23fff'/%3E%3Crect x='7' y='9' width='2' height='2' fill='%23fff'/%3E%3Crect x='9' y='7' width='2' height='2' fill='%23fff'/%3E%3Crect x='9' y='9' width='2' height='2' fill='%23fff'/%3E%3Crect x='11' y='7' width='2' height='2' fill='%23fff'/%3E%3Crect x='11' y='9' width='2' height='2' fill='%23fff'/%3E%3Crect x='3' y='11' width='10' height='2' fill='%23fff'/%3E%3Crect x='3' y='13' width='10' height='2' fill='%23fff'/%3E%3Crect x='3' y='15' width='10' height='2' fill='%23fff'/%3E%3Crect x='4' y='0' width='2' height='2' fill='%231e6ac9'/%3E%3Crect x='4' y='2' width='2' height='2' fill='%231e6ac9'/%3E%3Crect x='4' y='4' width='2' height='2' fill='%231e6ac9'/%3E%3Crect x='4' y='6' width='2' height='2' fill='%231e6ac9'/%3E%3Crect x='4' y='8' width='2' height='2' fill='%231e6ac9'/%3E%3Crect x='6' y='4' width='2' height='2' fill='%231e6ac9'/%3E%3Crect x='6' y='6' width='2' height='2' fill='%231e6ac9'/%3E%3Crect x='6' y='8' width='2' height='2' fill='%231e6ac9'/%3E%3Crect x='8' y='6' width='2' height='2' fill='%231e6ac9'/%3E%3Crect x='8' y='8' width='2' height='2' fill='%231e6ac9'/%3E%3Crect x='10' y='6' width='2' height='2' fill='%231e6ac9'/%3E%3Crect x='10' y='8' width='2' height='2' fill='%231e6ac9'/%3E%3Crect x='2' y='10' width='10' height='2' fill='%231e6ac9'/%3E%3Crect x='2' y='12' width='10' height='2' fill='%231e6ac9'/%3E%3Crect x='2' y='14' width='10' height='2' fill='%231e6ac9'/%3E%3C/svg%3E") 4 0, pointer;
+}
+
+/* ── Login/register page centering (add this class to <body>) ── */
+body.auth-page {
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+/* ── Login card ──────────────────────────────────────────── */
+.login-card {
+  width: 100%;
+  max-width: 480px;
+  background: var(--card-bg);
+  border: 4px solid var(--border);
+  padding: 48px 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(0, 255, 65, 0.02) 50%
+  );
+  background-size: 100% 8px;
+  pointer-events: none;
+}
+
+/* ── Header ──────────────────────────────────────────────── */
+.header {
+  margin-bottom: 48px;
+  text-align: center;
+}
+
+.header h1 {
+  font-size: 3.5rem;
+  font-weight: 900;
+  line-height: 0.9;
+  letter-spacing: -4px;
+  text-transform: uppercase;
+  text-shadow: 0 0 15px var(--glow);
+  margin: 0 0 16px;
+}
+
+.header p {
+  font-size: 1.2rem;
+  opacity: 0.85;
+  letter-spacing: 1px;
+}
+
+/* ── Form ────────────────────────────────────────────────── */
+.form-body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.input-group { position: relative; }
+
+label {
+  display: block;
+  font-size: 1rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+  color: var(--text-light);
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"] {
+  width: 100%;
+  padding: 13px 15px;
+  background: #000;
+  border: 3px solid var(--border);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 1.1rem;
+  letter-spacing: 1px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+[data-theme="light"] input[type="text"],
+[data-theme="light"] input[type="password"],
+[data-theme="light"] input[type="email"] {
+  background: #fff;
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 20px var(--glow), inset 0 0 12px var(--glow);
+  caret-color: var(--accent);
+  animation: blink-caret 1.2s step-end infinite;
+}
+
+@keyframes blink-caret {
+  from, to { caret-color: transparent; }
+  50%       { caret-color: var(--accent); }
+}
+
+.password-toggle {
+  position: absolute;
+  right: 14px;
+  top: 46px;
+  color: var(--text-light);
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+/* ── Checkbox row ────────────────────────────────────────── */
+.options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1rem;
+}
+
+.remember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.forgot {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.forgot:hover {
+  text-decoration: underline;
+  text-shadow: 0 0 10px var(--glow);
+}
+
+/* ── Submit button ───────────────────────────────────────── */
+button[type="submit"] {
+  width: 100%;
+  padding: 16px;
+  background: var(--accent);
+  color: #000;
+  border: none;
+  font-family: inherit;
+  font-size: 1.2rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+  box-shadow: 0 0 25px var(--glow);
+}
+
+button[type="submit"]:hover:not(:disabled) {
+  background: var(--btn-hover);
+  box-shadow: 0 0 40px var(--glow);
+  transform: scale(1.02);
+}
+
+button[type="submit"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Footer ──────────────────────────────────────────────── */
+.footer {
+  text-align: center;
+  margin-top: 36px;
+  font-size: 1rem;
+  color: var(--text-light);
+}
+
+.footer a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+  text-shadow: 0 0 10px var(--glow);
+}
+
+/* ── Success colour utility ──────────────────────────────── */
+.success {
+  color: var(--success) !important;
+  font-weight: bold;
+  text-shadow: 0 0 10px var(--success);
+}
+
+/* ── Browser autofill override ───────────────────────────── */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0px 1000px #000 inset, 0 0 20px var(--glow);
+          box-shadow: 0 0 0px 1000px #000 inset, 0 0 20px var(--glow);
+  transition: background-color 5000s ease-in-out 0s;
+  caret-color: var(--accent);
+}
+
+[data-theme="light"] input:-webkit-autofill,
+[data-theme="light"] input:-webkit-autofill:hover,
+[data-theme="light"] input:-webkit-autofill:focus,
+[data-theme="light"] input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0px 1000px #fff inset, 0 0 20px var(--glow);
+          box-shadow: 0 0 0px 1000px #fff inset, 0 0 20px var(--glow);
+}
+
+
+/* ── Mobile ──────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .login-card {
+    padding: 32px 20px;
+    border-width: 3px;
+  }
+  .header h1 { font-size: 2.6rem; }
+}

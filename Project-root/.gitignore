@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Environment files
+.env
+*.env.local
+.env.*
+
+# User data — NEVER commit passwords
+users.json
+data/users.json
+data/
+
+# SQLite database
+*.db
+*.sqlite
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+*.log

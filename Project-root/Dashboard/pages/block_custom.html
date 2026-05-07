@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>WattWise – Custom Block</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/shared.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .app-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 7px;
+    }
+    .app-bar-lbl {
+      font-size: 0.63rem;
+      color: var(--text3);
+      width: 110px;
+      flex-shrink: 0;
+    }
+    .app-bar-track {
+      flex: 1;
+      height: 5px;
+      background: var(--bg3);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .app-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 3px;
+    }
+    .app-bar-val {
+      font-size: 0.63rem;
+      color: var(--accent2);
+      width: 60px;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  
+<div class="cursor" id="cursor"></div>    
+<div class="cursor-dot" id="cursorDot"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo"><h1>WATT<br>WISE</h1><p>Energy Monitor</p></div>
+  <div class="sidebar-user">
+    <div class="avatar" id="avatarEl">—</div>
+    <div class="sidebar-user-info">
+      <span id="sidebarUser">—</span>
+      <small id="sidebarRole">—</small>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a class="nav-item" data-page="dashboard"><i class="fas fa-gauge-high"></i> Dashboard</a>
+    <a class="nav-item" data-page="live"><i class="fas fa-bolt"></i> Live Usage</a>
+    <a class="nav-item" data-page="consumption"><i class="fas fa-chart-line"></i> Consumption Trend</a>
+
+    <div class="nav-section-label">Analysis</div>
+    <a class="nav-item" data-page="forecast"><i class="fas fa-brain"></i> ML Forecast</a>
+    <a class="nav-item" data-page="lstm_dashboard"><i class="fas fa-wave-square"></i> LSTM Dashboard</a>
+    <a class="nav-item" data-page="ai_assistant"><i class="fas fa-robot"></i> AI Assistant</a>
+    <a class="nav-item" data-page="anomalies"><i class="fas fa-triangle-exclamation"></i> Anomalies</a>
+
+    <div class="nav-section-label">Blocks</div>
+    <!-- Shared.js will inject Blocks Manager here -->
+    <a class="nav-item" data-page="block_gh"><i class="fas fa-venus"></i> Block GH</a>
+    <a class="nav-item" data-page="block_bh"><i class="fas fa-mars"></i> Block BH</a>
+    <a class="nav-item" data-page="block_ab1"><i class="fas fa-building-columns"></i> Block AB1</a>
+    <a class="nav-item" data-page="block_ab2"><i class="fas fa-building"></i> Block AB2</a>
+    <a class="nav-item" data-page="block_adm"><i class="fas fa-landmark"></i> Block ADMIN</a>
+
+    <div class="nav-section-label">Account</div>
+    <a class="nav-item" data-page="switch_user"><i class="fas fa-users-gear"></i> User Management</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <a class="nav-item danger" id="logoutBtn"><i class="fas fa-right-from-bracket"></i> Sign Out</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h2><i class="fas fa-layer-group" style="font-size:1rem;margin-right:8px"></i><span id="blockTitle">Loading...</span></h2>
+      <p><span id="blockDesc"></span> &middot;
+        <a id="backBtn" style="color:var(--accent3);cursor:pointer;text-decoration:underline">← Back to Blocks Manager</a>
+      </p>
+    </div>
+    <div class="topbar-right"><span><span class="status-dot"></span>Block Online</span></div>
+  </div>
+
+  <p class="section-title">Weekly Summary</p>
+  <div class="grid-4" id="statsGrid"></div>
+
+  <p class="section-title">Daily Consumption</p>
+  <div class="card" style="margin-bottom:1rem">
+    <div class="chart-wrap" style="height:240px;">
+      <canvas id="dailyChart"></canvas>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-label"><i class="fas fa-plug"></i> Appliance Breakdown</div>
+      <div id="appBars">
+        <p style="color:var(--text3); font-size:0.8rem; margin-top:20px;">No appliance level data recorded.</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label"><i class="fas fa-chart-pie"></i> Appliance Share</div>
+      <div class="chart-wrap-sm" style="height:220px;display:flex;align-items:center;justify-content:center;">
+        <p id="pieChartEmpty" style="color:var(--text3); font-size:0.8rem;">Insufficient data for pie chart.</p>
+        <canvas id="pieChart" style="display:none;"></canvas>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="../js/shared.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    initSidebar('blocks_manager'); 
+    
+    const backBtn = document.getElementById('backBtn');
+    if (backBtn) backBtn.addEventListener('click', () => navigate('blocks_manager'));
+
+    const API_BASE = 'http://127.0.0.1:5000';
+    const urlParams = new URLSearchParams(window.location.search);
+    const blockId = urlParams.get('id');
+
+    let blockInfo = null;
+
+    if (!blockId) {
+      document.getElementById('blockTitle').innerText = 'Invalid Block ID';
+      return;
+    }
+
+    // Fetch block info
+    async function fetchBlockDetails() {
+      const token = localStorage.getItem("token");
+      try {
+        const res = await fetch(`${API_BASE}/blocks/${blockId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await res.json();
+        if (data.success) {
+          blockInfo = data.block;
+          document.getElementById('blockTitle').innerText = blockInfo.name;
+          document.getElementById('blockDesc').innerText = blockInfo.description || 'Custom Campus Block';
+          renderBlock();
+        } else {
+          document.getElementById('blockTitle').innerText = 'Access Denied or Block Not Found';
+        }
+      } catch (err) {
+        document.getElementById('blockTitle').innerText = 'Error loading block';
+      }
+    }
+
+    let dailyChartInst = null;
+    let pieChartInst = null;
+
+    function renderBlock() {
+      if (dailyChartInst) { dailyChartInst.destroy(); dailyChartInst = null; }
+      if (pieChartInst)   { pieChartInst.destroy();   pieChartInst = null;   }
+      
+      if (!blockInfo) return;
+
+      // Extract data matching this block's name from WW object.
+      // E.g., if Name is "Physics Lab", we look for WW.blocks["Physics Lab"]
+      const B = WW.blocks[blockInfo.name] || {
+        total: 0, avg: 0, peak: 0, rate: 8.5,
+        daily: [0,0,0,0,0,0,0],
+        appliances: []
+      };
+
+      document.getElementById('statsGrid').innerHTML = `
+        <div class="card">
+          <div class="card-label"><i class="fas fa-bolt"></i> Total Data</div>
+          <div class="card-value">${B.total}</div>
+          <div class="card-sub">kWh consumed</div>
+        </div>
+        <div class="card">
+          <div class="card-label"><i class="fas fa-calendar-day"></i> Average</div>
+          <div class="card-value">${B.avg.toFixed(1)}</div>
+          <div class="card-sub">kWh</div>
+        </div>
+        <div class="card">
+          <div class="card-label"><i class="fas fa-fire"></i> Peak</div>
+          <div class="card-value">${B.peak}</div>
+          <div class="card-sub">kWh</div>
+        </div>
+        <div class="card">
+          <div class="card-label"><i class="fas fa-file-invoice-dollar"></i> Est. Bill</div>
+          <div class="card-value" style="font-size:1.1rem">
+            ₹${(B.total * B.rate).toLocaleString('en-IN', {maximumFractionDigits:0})}
+          </div>
+          <div class="card-sub">@ ₹${B.rate}/kWh</div>
+        </div>`;
+
+      // Daily chart (even if zero data, plot zero lines for week)
+      dailyChartInst = lineChart('dailyChart', WW.dates || ['Day 1','Day 2','Day 3','Day 4','Day 5','Day 6','Day 7'], [
+        dataset(blockInfo.name, B.daily, 'G-H') // use a generic color for custom blocks
+      ]);
+
+      // If appliances exist, plot them. Otherwise leave empty notices.
+      if (B.appliances && B.appliances.length > 0) {
+        const maxVal = Math.max(...B.appliances.map(a => a[1]));
+        document.getElementById('appBars').innerHTML = B.appliances.map(([name, kwh]) => `
+          <div class="app-bar-row">
+            <span class="app-bar-lbl">${name}</span>
+            <div class="app-bar-track">
+              <div class="app-bar-fill" style="width:${Math.round((kwh / maxVal) * 100)}%"></div>
+            </div>
+            <span class="app-bar-val">${kwh} kWh</span>
+          </div>
+        `).join('');
+
+        document.getElementById('pieChartEmpty').style.display = 'none';
+        document.getElementById('pieChart').style.display = 'block';
+        pieChartInst = new Chart(document.getElementById('pieChart').getContext('2d'), {
+          type: 'doughnut',
+          data: {
+            labels: B.appliances.map(a => a[0]),
+            datasets: [{
+              data: B.appliances.map(a => a[1]),
+              backgroundColor: B.appliances.map((_, i) => ['#b026ff','#00ff41','#00aaff','#ffaa00','#ff6432'][i%5]),
+              borderColor: '#010d01',
+              borderWidth: 3
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { labels: { color: '#00cc33', font: { family: "'Share Tech Mono'", size: 10 }, boxWidth: 10 } },
+              tooltip: { backgroundColor: '#010d01', borderColor: '#00551a', borderWidth: 1, titleColor: '#00ff41', bodyColor: '#00cc33' }
+            }
+          }
+        });
+      }
+    }
+
+    // Trigger WW to load dataset data, then render block details.
+    window.addEventListener('ww:ready', fetchBlockDetails, { once: true });
+    loadAndPopulateWW();
+
+  } catch (err) {
+    console.error('[WattWise] Custom Block init error:', err);
+  }
+});
+</script>
+</body>
+</html>

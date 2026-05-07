@@ -1,0 +1,311 @@
+/* ── Layout ─────────────────────────────────────────────── */
+.app-container {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ── SIDEBAR - Scrollable Version ── */
+.sidebar {
+  width: var(--sidebar-w);
+  height: 100vh;                    /* Changed from min-height */
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; 
+  left: 0;
+  z-index: 100;
+  overflow: hidden;                 /* Important for controlled scrolling */
+}
+
+/* Header (Logo + User) - Fixed at top */
+.sidebar-logo,
+.sidebar-user {
+  flex-shrink: 0;                   /* Prevent shrinking */
+}
+
+.sidebar-logo {
+  padding: 1.4rem 1.4rem 0.8rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-logo h1 {
+  font-family: var(--font-head);
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-shadow: 0 0 20px var(--accent);
+  line-height: 1.1;
+}
+
+.sidebar-logo p {
+  font-size: 0.6rem;
+  color: var(--text3);
+  letter-spacing: 3px;
+  margin-top: 3px;
+}
+
+.sidebar-user {
+  padding: 0.8rem 1.4rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  width: 30px; 
+  height: 30px;
+  border: 1.5px solid var(--border2);
+  border-radius: 50%;
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  font-size: 0.72rem;
+  background: var(--bg3);
+  color: var(--accent2);
+  flex-shrink: 0;
+}
+
+.sidebar-user-info span { 
+  display: block; 
+  font-size: 0.78rem; 
+  color: var(--text2); 
+}
+
+.sidebar-user-info small { 
+  font-size: 0.62rem; 
+  color: var(--text3); 
+}
+
+/* Scrollable Navigation Area */
+.sidebar-nav {
+  flex: 1;                          /* Takes all remaining space */
+  padding: 0.8rem 0;
+  overflow-y: auto;                 /* This makes it scrollable */
+  overflow-x: hidden;
+  min-height: 0;                    /* Important for flex scrolling */
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent3) transparent;
+}
+
+/* Custom Scrollbar */
+.sidebar-nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: var(--accent3);
+  border-radius: 10px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: var(--accent2);
+}
+
+.nav-section-label {
+  font-size: 0.58rem;
+  letter-spacing: 3px;
+  color: var(--text3);
+  padding: 0.7rem 1.4rem 0.3rem;
+  text-transform: uppercase;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0.6rem 1.4rem;
+  color: var(--text3);
+  text-decoration: none;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  border-left: 3px solid transparent;
+  letter-spacing: 0.5px;
+}
+
+.nav-item i { 
+  width: 16px; 
+  text-align: center; 
+  font-size: 0.78rem; 
+}
+
+.nav-item:hover  { 
+  color: var(--accent); 
+  background: var(--glow2); 
+  border-left-color: var(--accent3); 
+}
+
+.nav-item.active { 
+  color: var(--accent); 
+  background: var(--glow2); 
+  border-left-color: var(--accent); 
+}
+
+/* Special styling for AI & LSTM */
+.nav-item[data-page="ai_assistant"],
+.nav-item[data-page="lstm_dashboard"] {
+  color: var(--accent);
+  font-weight: bold;
+  border-left: 3px solid var(--accent);
+}
+
+.nav-item.danger { 
+  color: var(--danger); 
+}
+
+.nav-item.danger:hover { 
+  background: rgba(255,51,85,0.08); 
+  border-left-color: var(--danger); 
+}
+
+/* Bottom section - Fixed at bottom */
+.sidebar-bottom {
+  padding: 0.8rem 0;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;                   /* Keep it at bottom */
+}
+
+/* ── Main content ────────────────────────────────────────── */
+.main-content {
+  padding: 2.5rem 2rem;
+  overflow-y: auto;
+}
+
+/* ── Page header ─────────────────────────────────────────── */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.page-header h1 {
+  font-size: 2.4rem;
+  letter-spacing: -1.5px;
+  text-shadow: 0 0 15px var(--glow);
+  margin-bottom: 0.3rem;
+}
+
+.welcome p { font-size: 1rem; opacity: 0.8; }
+
+.last-update {
+  font-size: 0.9rem;
+  color: var(--text-light);
+  padding-top: 0.5rem;
+}
+
+/* ── Stats cards grid ────────────────────────────────────── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.card {
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  padding: 1.5rem;
+  border-radius: 4px;
+  transition: box-shadow 0.2s;
+}
+
+.card:hover {
+  box-shadow: 0 0 18px var(--glow);
+}
+
+.card h3 {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-light);
+  margin-bottom: 0.8rem;
+}
+
+.card .value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: -1px;
+  color: var(--accent);
+  margin-bottom: 0.4rem;
+}
+
+.card .change {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  opacity: 0.8;
+}
+
+.card .small-text {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  opacity: 0.65;
+}
+
+/* Alert card */
+.alert-card {
+  border-color: #ff3366;
+  background: rgba(255, 51, 102, 0.06);
+}
+
+.alert-card h3 { color: #ff3366; }
+.alert-card p  { font-size: 0.95rem; color: #ff6688; }
+
+/* ── Chart section ───────────────────────────────────────── */
+.chart-section {
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  padding: 1.5rem;
+  border-radius: 4px;
+}
+
+.chart-section h2 {
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-light);
+  margin-bottom: 1.2rem;
+}
+
+.chart-container {
+  position: relative;
+  height: 280px;
+  width: 100%;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .app-container {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 3px solid var(--border);
+  }
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .page-header h1 {
+    font-size: 1.8rem;
+  }
+}

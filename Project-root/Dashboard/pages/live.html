@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>WattWise – Live Usage</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/shared.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .live-card {
+      border-color: var(--accent);
+      box-shadow: 0 0 14px var(--glow2);
+    }
+    .meter {
+      font-family: var(--font-head);
+      font-size: 2rem;
+      color: var(--accent);
+      text-shadow: 0 0 15px var(--accent);
+    }
+    .pulse-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent);
+      animation: pulse 1.5s infinite;
+      display: inline-block;
+      margin-right: 6px;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="cursor" id="cursor"></div>    
+<div class="cursor-dot" id="cursorDot"></div>
+
+<aside class="sidebar">
+  <div class="sidebar-logo"><h1>WATT<br>WISE</h1><p>Energy Monitor</p></div>
+  <div class="sidebar-user">
+    <div class="avatar" id="avatarEl">—</div>
+    <div class="sidebar-user-info">
+      <span id="sidebarUser">—</span>
+      <small id="sidebarRole">—</small>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a class="nav-item" data-page="dashboard"><i class="fas fa-gauge-high"></i> Dashboard</a>
+    <a class="nav-item active" data-page="live"><i class="fas fa-bolt"></i> Live Usage</a>
+    <a class="nav-item" data-page="consumption"><i class="fas fa-chart-line"></i> Consumption Trend</a>
+    <div class="nav-section-label">Analysis</div>
+    <a class="nav-item" data-page="forecast"><i class="fas fa-brain"></i> ML Forecast</a>
+    <a class="nav-item" data-page="lstm_dashboard"><i class="fas fa-wave-square"></i> LSTM Dashboard</a>
+    <a class="nav-item" data-page="ai_assistant"><i class="fas fa-robot"></i> AI Assistant</a>
+    <a class="nav-item" data-page="anomalies"><i class="fas fa-triangle-exclamation"></i> Anomalies</a>
+    <div class="nav-section-label">Blocks</div>
+    <a class="nav-item" data-page="block_gh"><i class="fas fa-venus"></i> Block GH</a>
+    <a class="nav-item" data-page="block_bh"><i class="fas fa-mars"></i> Block BH</a>
+    <a class="nav-item" data-page="block_ab1"><i class="fas fa-building-columns"></i> Block AB1</a>
+    <a class="nav-item" data-page="block_ab2"><i class="fas fa-building"></i> Block AB2</a>
+    <a class="nav-item" data-page="block_adm"><i class="fas fa-landmark"></i> Block ADMIN</a>
+    <div class="nav-section-label">Account</div>
+    <a class="nav-item" data-page="switch_user"><i class="fas fa-users-gear"></i> User Management</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <a class="nav-item danger" id="logoutBtn"><i class="fas fa-right-from-bracket"></i> Sign Out</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h2>LIVE USAGE</h2>
+      <p>Real-time consumption per block   Updates every 1 second</p>
+    </div>
+    <div class="topbar-right" style="display:flex; align-items:center; gap: 15px;">
+      <div id="hwConfig" style="display:none; align-items:center; gap: 5px;">
+        <input type="text" id="arduinoIpInput" placeholder="Arduino IP" style="padding: 4px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 0.7rem; width: 110px;" />
+        <button class="btn-solid" onclick="updateHardwareIP()" style="padding: 4px 8px; font-size: 0.65rem;">Set IP</button>
+      </div>
+      <span id="hwConnStatus" style="font-size: 0.75rem; color: var(--text3);"><span class="pulse-dot" style="background:var(--danger); box-shadow:0 0 10px var(--danger);"></span>Offline</span>
+    </div>
+  </div>
+
+  <div id="adminRelayPanel" style="display:none; margin-bottom: 20px; padding: 15px; border: 1px solid var(--border2); background: var(--bg3); border-radius: 8px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+      <p class="section-title" style="margin:0;"><i class="fas fa-sliders"></i> Hardware Control (Admin)</p>
+      <div>
+        <button class="btn-solid" style="background:var(--accent); color:#000; padding:4px 10px; font-size:0.7rem;" onclick="setAllRelays('ON')">⚡ ALL ON</button>
+        <button class="btn-solid" style="background:var(--danger); border-color:var(--danger); color:#fff; padding:4px 10px; font-size:0.7rem; margin-left:8px;" onclick="setAllRelays('OFF')">⭘ ALL OFF</button>
+      </div>
+    </div>
+    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+      <!-- R1 -->
+      <div style="background:var(--bg); border:1px solid var(--border); padding:10px; border-radius:4px; text-align:center;">
+        <div style="font-size:0.7rem; color:var(--text3); margin-bottom:8px;">Block GH (R1)</div>
+        <div style="display:flex; gap:5px; justify-content:center;">
+          <button id="btnR1ON" class="btn-solid" style="padding:4px 12px; font-size:0.7rem;" onclick="toggleRelay(1, 'ON')">ON</button>
+          <button id="btnR1OFF" class="btn-solid" style="padding:4px 12px; font-size:0.7rem;" onclick="toggleRelay(1, 'OFF')">OFF</button>
+        </div>
+      </div>
+      <!-- R2 -->
+      <div style="background:var(--bg); border:1px solid var(--border); padding:10px; border-radius:4px; text-align:center;">
+        <div style="font-size:0.7rem; color:var(--text3); margin-bottom:8px;">Block BH (R2)</div>
+        <div style="display:flex; gap:5px; justify-content:center;">
+          <button id="btnR2ON" class="btn-solid" style="padding:4px 12px; font-size:0.7rem;" onclick="toggleRelay(2, 'ON')">ON</button>
+          <button id="btnR2OFF" class="btn-solid" style="padding:4px 12px; font-size:0.7rem;" onclick="toggleRelay(2, 'OFF')">OFF</button>
+        </div>
+      </div>
+      <!-- R3 -->
+      <div style="background:var(--bg); border:1px solid var(--border); padding:10px; border-radius:4px; text-align:center;">
+        <div style="font-size:0.7rem; color:var(--text3); margin-bottom:8px;">Block AB1 (R3)</div>
+        <div style="display:flex; gap:5px; justify-content:center;">
+          <button id="btnR3ON" class="btn-solid" style="padding:4px 12px; font-size:0.7rem;" onclick="toggleRelay(3, 'ON')">ON</button>
+          <button id="btnR3OFF" class="btn-solid" style="padding:4px 12px; font-size:0.7rem;" onclick="toggleRelay(3, 'OFF')">OFF</button>
+        </div>
+      </div>
+      <!-- R4 -->
+      <div style="background:var(--bg); border:1px solid var(--border); padding:10px; border-radius:4px; text-align:center;">
+        <div style="font-size:0.7rem; color:var(--text3); margin-bottom:8px;">Block AB2 (R4)</div>
+        <div style="display:flex; gap:5px; justify-content:center;">
+          <button id="btnR4ON" class="btn-solid" style="padding:4px 12px; font-size:0.7rem;" onclick="toggleRelay(4, 'ON')">ON</button>
+          <button id="btnR4OFF" class="btn-solid" style="padding:4px 12px; font-size:0.7rem;" onclick="toggleRelay(4, 'OFF')">OFF</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="section-title">Current Load Per Block</p>
+  <div class="grid-3">
+    <div class="card live-card">
+      <div class="card-label" style="display:flex; justify-content:space-between;">
+        <span><i class="fas fa-venus"></i> Block GH</span>
+        <span id="sns0" style="font-size:0.6rem; color:var(--text3);">◎ IDLE</span>
+      </div>
+      <div class="meter" id="gh-live">0.0</div>
+      <div class="card-sub">kWh today   Main AC Circuit</div>
+    </div>
+    <div class="card live-card">
+      <div class="card-label" style="display:flex; justify-content:space-between;">
+        <span><i class="fas fa-mars"></i> Block BH</span>
+        <span id="sns1" style="font-size:0.6rem; color:var(--text3);">◎ IDLE</span>
+      </div>
+      <div class="meter" id="bh-live">0.0</div>
+      <div class="card-sub">kWh today   Main AC Circuit</div>
+    </div>
+    <div class="card live-card">
+      <div class="card-label" style="display:flex; justify-content:space-between;">
+        <span><i class="fas fa-building-columns"></i> Block AB1</span>
+        <span id="sns2" style="font-size:0.6rem; color:var(--text3);">◎ IDLE</span>
+      </div>
+      <div class="meter" id="ab1-live">0.0</div>
+      <div class="card-sub">kWh today   Lab PCs Circuit</div>
+    </div>
+    <div class="card live-card">
+      <div class="card-label" style="display:flex; justify-content:space-between;">
+        <span><i class="fas fa-building"></i> Block AB2</span>
+        <span id="sns3" style="font-size:0.6rem; color:var(--text3);">◎ IDLE</span>
+      </div>
+      <div class="meter" id="ab2-live">0.0</div>
+      <div class="card-sub">kWh today   BigLab PCs</div>
+    </div>
+    <div class="card live-card" style="opacity: 0.7;">
+      <div class="card-label">
+        <span><i class="fas fa-landmark"></i> Block ADMIN (Simulated)</span>
+      </div>
+      <div class="meter" id="adm-live">0.0</div>
+      <div class="card-sub">kWh today   (No hardware sensor)</div>
+    </div>
+    <div class="card">
+      <div class="card-label"><i class="fas fa-sigma"></i> Total Usage</div>
+      <div class="meter" id="total-live">0</div>
+      <div class="card-sub">kWh combined today</div>
+    </div>
+  </div>
+
+  <p class="section-title">Live Chart - Last 15 Readings</p>
+  <div class="card">
+    <div class="chart-wrap" style="height:280px;">
+      <canvas id="liveChart"></canvas>
+    </div>
+  </div>
+</main>
+
+<script src="../js/shared.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  initSidebar('live');
+
+  // Hardcoded nominal load assumptions per block (if relay/sensor is active)
+  const bases = {
+    'G-H':   92.4,
+    'B-H':   74.3,
+    'AB1':   177.3,
+    'AB2':   396.0,
+    'ADMIN': 322.47
+  };
+
+  const history = {
+    'G-H':   [],
+    'B-H':   [],
+    'AB1':   [],
+    'AB2':   [],
+    'ADMIN': []
+  };
+
+  const liveIds  = ['gh-live', 'bh-live', 'ab1-live', 'ab2-live', 'adm-live'];
+  const blockKeys = ['G-H', 'B-H', 'AB1', 'AB2', 'ADMIN'];
+  let liveChartInstance = null;
+
+  // Admin UI check
+  const role = localStorage.getItem('role') || 'user';
+  if (role === 'admin') {
+    document.getElementById('adminRelayPanel').style.display = 'block';
+    document.getElementById('hwConfig').style.display = 'flex';
+    const savedIp = localStorage.getItem('arduinoIp');
+    if (savedIp) document.getElementById('arduinoIpInput').value = savedIp;
+  }
+
+  window.updateHardwareIP = async function() {
+    const ip = document.getElementById('arduinoIpInput').value.trim();
+    if (!ip) return;
+    try {
+      const res = await fetch('http://localhost:5000/hardware/config', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
+        },
+        body: JSON.stringify({ ip })
+      });
+      const data = await res.json();
+      if (data.success) {
+        localStorage.setItem('arduinoIp', ip);
+        alert('IP Updated. Backend is reconnecting.');
+      } else {
+        alert('Error: ' + data.message);
+      }
+    } catch (e) {
+      alert('Network error connecting to backend.');
+    }
+  };
+
+  window.toggleRelay = async function(idx, state) {
+    try {
+      const res = await fetch('http://localhost:5000/hardware/relay', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
+        },
+        body: JSON.stringify({ relay: idx, state })
+      });
+      const data = await res.json();
+      if (!data.success) {
+        console.error(data.message);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  window.setAllRelays = function(state) {
+    for (let i = 1; i <= 4; i++) {
+      setTimeout(() => toggleRelay(i, state), i * 150);
+    }
+  };
+
+  async function fetchHardwareStatus() {
+    try {
+      const res = await fetch('http://localhost:5000/hardware/status', {
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+      });
+      const data = await res.json();
+      if (data.success) {
+        updateUI(data);
+      }
+    } catch (e) {
+      // Backend not reachable
+      document.getElementById('hwConnStatus').innerHTML = '<span class="pulse-dot" style="background:var(--danger); box-shadow:0 0 10px var(--danger);"></span>Offline';
+    }
+  }
+
+  function updateUI(hwData) {
+    // 1. Connection status
+    if (hwData.connected) {
+      document.getElementById('hwConnStatus').innerHTML = '<span class="pulse-dot" style="background:var(--accent); box-shadow:0 0 10px var(--accent);"></span>Connected';
+    } else {
+      document.getElementById('hwConnStatus').innerHTML = '<span class="pulse-dot" style="background:var(--warn); box-shadow:0 0 10px var(--warn);"></span>Disconnected';
+    }
+
+    // 2. Relay buttons state (if admin)
+    if (role === 'admin') {
+      for (let i = 0; i < 4; i++) {
+        const isON = hwData.relays[i];
+        const btnOn = document.getElementById('btnR' + (i + 1) + 'ON');
+        const btnOff = document.getElementById('btnR' + (i + 1) + 'OFF');
+        if (isON) {
+          btnOn.style.background = '#1a8a4a';
+          btnOn.style.border = '2px inset #000';
+          btnOff.style.background = 'var(--danger)';
+          btnOff.style.border = 'none';
+        } else {
+          btnOn.style.background = 'var(--accent)';
+          btnOn.style.border = 'none';
+          btnOff.style.background = '#8a1a1a';
+          btnOff.style.border = '2px inset #000';
+        }
+      }
+    }
+
+    // 3. Sensor Badges
+    for (let i = 0; i < 4; i++) {
+      const badge = document.getElementById('sns' + i);
+      if (!hwData.connected) {
+        badge.innerHTML = '<span style="color:var(--warn);">◎ SIMULATED</span>';
+      } else if (hwData.sensors[i] === 1) {
+        badge.innerHTML = '<span style="color:var(--accent);">◉ ACTIVE</span>';
+      } else {
+        badge.innerHTML = '<span style="color:var(--text3);">◎ IDLE</span>';
+      }
+    }
+
+    // 4. Update Power Readings & Chart
+    let total = 0;
+    
+    // R1 - R4 correspond to G-H, B-H, AB1, AB2
+    for (let i = 0; i < 4; i++) {
+      const key = blockKeys[i];
+      let val = 0;
+      if (!hwData.connected) {
+        // Default simulated data
+        val = +(bases[key] * (0.97 + Math.random() * 0.06)).toFixed(1);
+      } else if (hwData.sensors[i] === 1) {
+        // Appliance is ON -> draw power with slight noise
+        val = +(bases[key] * (0.98 + Math.random() * 0.04)).toFixed(1);
+      }
+      document.getElementById(liveIds[i]).textContent = val;
+      history[key].push(val);
+      if (history[key].length > 15) history[key].shift();
+      total += val;
+    }
+
+    // ADMIN is simulated
+    let admVal = +(bases['ADMIN'] * (0.97 + Math.random() * 0.06)).toFixed(1);
+    document.getElementById('adm-live').textContent = admVal;
+    history['ADMIN'].push(admVal);
+    if (history['ADMIN'].length > 15) history['ADMIN'].shift();
+    total += admVal;
+
+    document.getElementById('total-live').textContent = Math.round(total);
+
+    // Chart update
+    const labels = Array.from({ length: history['G-H'].length }, (_, i) =>
+      '-' + (history['G-H'].length - i) + 's'
+    );
+
+    if (!liveChartInstance) {
+      liveChartInstance = lineChart('liveChart', labels, blockKeys.map(key =>
+        dataset(WW.blocks[key].label, [...history[key]], key)
+      ));
+      // Remove animation for live fast polling
+      liveChartInstance.options.animation = false;
+    } else {
+      liveChartInstance.data.labels = labels;
+      blockKeys.forEach((key, i) => {
+        liveChartInstance.data.datasets[i].data = [...history[key]];
+      });
+      liveChartInstance.update('none');
+    }
+  }
+
+  // Poll every 1000ms instead of 3000ms
+  setInterval(fetchHardwareStatus, 1000);
+  fetchHardwareStatus();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>WattWise – AI Energy Assistant</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/shared.css"/>
+  <style>
+    .ai-layout {
+      display: grid;
+      grid-template-columns: 1fr 550px;
+      gap: 1rem;
+      align-items: start;
+    }
+    .chat-panel {
+      display: flex; flex-direction: column;
+      height: calc(100vh - 130px);
+      min-height: 480px;
+      background: var(--card);
+      border: 1px solid var(--border2);
+      position: relative; overflow: hidden;
+    }
+    .chat-panel::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    }
+    .chat-header {
+      padding: 12px 16px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+      background: var(--bg3); flex-shrink: 0;
+    }
+    .chat-avatar {
+      width: 34px; height: 34px; border: 1.5px solid var(--accent3); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; color: var(--accent); background: rgba(0,255,65,0.06);
+      flex-shrink: 0;
+    }
+    .chat-header h3 { font-family: var(--font-head); font-size: 0.76rem; color: var(--accent2); letter-spacing: 2px; }
+    .chat-header p  { font-size: 0.58rem; color: var(--text3); margin-top: 2px; }
+    .status-badge {
+      margin-left: auto; display: flex; align-items: center; gap: 5px;
+      font-size: 0.58rem; color: var(--accent3); letter-spacing: 1px;
+    }
+    .status-badge .dot { width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent); animation: pulse 2s infinite; }
+    .clear-btn {
+      padding: 3px 9px; background: transparent; border: 1px solid var(--border);
+      color: var(--text3); font-family: var(--font-main); font-size: 0.6rem;
+      letter-spacing: 1px; cursor: pointer; transition: all 0.15s; margin-left: 10px;
+    }
+    .clear-btn:hover { border-color: var(--danger); color: var(--danger); }
+    .chat-messages {
+      flex: 1; overflow-y: auto; padding: 14px;
+      display: flex; flex-direction: column; gap: 10px;
+      scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+    }
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .msg { display: flex; gap: 8px; max-width: 90%; animation: msgIn 0.22s ease; }
+    @keyframes msgIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+    .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+    .msg.ai   { align-self: flex-start; }
+    .msg-av {
+      width: 27px; height: 27px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: bold;
+    }
+    .msg.ai   .msg-av { background: rgba(0,255,65,0.08); border: 1px solid var(--accent3); color: var(--accent); }
+    .msg.user .msg-av { background: rgba(0,170,255,0.08); border: 1px solid #004466; color: #0099cc; }
+    .msg-bbl { padding: 9px 13px; font-size: 0.72rem; line-height: 1.7; }
+    .msg.ai   .msg-bbl { background: var(--bg3); border: 1px solid var(--border); color: var(--text2); border-left: 2px solid var(--accent3); }
+    .msg.user .msg-bbl { background: rgba(0,170,255,0.05); border: 1px solid #003355; color: #99ccff; }
+    .msg-bbl strong { color: var(--accent); }
+    .msg-bbl code   { background: rgba(0,255,65,0.07); padding: 1px 5px; font-family: var(--font-main); font-size: 0.67rem; border: 1px solid var(--border); color: var(--accent2); }
+    .msg-ts { font-size: 0.55rem; color: var(--text3); margin-top: 3px; }
+    .msg.user .msg-ts { text-align: right; }
+    .typing-wrap { display: flex; gap: 4px; padding: 8px 12px; align-items: center; }
+    .t-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent3); animation: tbounce 1.2s infinite; }
+    .t-dot:nth-child(2) { animation-delay: 0.2s; }
+    .t-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes tbounce { 0%,60%,100%{transform:translateY(0);opacity:0.35} 30%{transform:translateY(-5px);opacity:1} }
+    .chips-bar {
+      padding: 8px 14px; border-top: 1px solid var(--border);
+      display: flex; gap: 5px; flex-wrap: wrap;
+      background: var(--bg2); flex-shrink: 0;
+    }
+    .chip {
+      padding: 4px 10px; font-size: 0.59rem; letter-spacing: 1px;
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--text3); cursor: pointer; transition: all 0.15s;
+    }
+    .chip:hover { border-color: var(--accent3); color: var(--accent2); background: rgba(0,255,65,0.04); }
+    .chat-input-row {
+      padding: 10px 14px; border-top: 1px solid var(--border);
+      display: flex; gap: 8px; flex-shrink: 0; background: var(--bg3);
+    }
+    .chat-input {
+      flex: 1; background: var(--bg); border: 1px solid var(--border);
+      color: var(--text); font-family: var(--font-main); font-size: 0.74rem;
+      padding: 9px 12px; outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .chat-input:focus { border-color: var(--accent3); box-shadow: 0 0 8px rgba(0,255,65,0.1); }
+    .chat-input::placeholder { color: var(--text3); }
+    .send-btn {
+      padding: 9px 16px; background: transparent; border: 1px solid var(--accent3);
+      color: var(--accent2); font-family: var(--font-main); font-size: 0.7rem;
+      letter-spacing: 2px; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    }
+    .send-btn:hover:not(:disabled) { background: rgba(0,255,65,0.07); border-color: var(--accent); color: var(--accent); box-shadow: 0 0 10px var(--glow); }
+    .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .side-panel { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.9rem; align-items: start; }
+    .mrow { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid rgba(0,85,26,0.3); font-size:0.69rem; }
+    .mrow:last-child { border-bottom:none; }
+    .mrow-lbl { color:var(--text3); }
+    .mrow-val { font-family:var(--font-head); font-size:0.78rem; color:var(--accent2); }
+    .suggestion {
+      padding: 6px 9px; background: var(--bg3); border: 1px solid var(--border);
+      border-left: 2px solid var(--accent3); font-size: 0.63rem; color: var(--text3);
+      cursor: pointer; transition: all 0.15s; line-height: 1.5;
+    }
+    .suggestion:hover { border-left-color: var(--accent); color: var(--accent2); background: rgba(0,255,65,0.03); }
+    .token-bar { display:flex; justify-content:space-between; padding:6px 0; font-size:0.62rem; color:var(--text3); border-bottom:1px solid var(--border); }
+    @media(max-width:1150px) {
+      .ai-layout { grid-template-columns: 1fr 300px; }
+      .side-panel { grid-template-columns: 1fr; }
+    }
+    @media(max-width:900px) {
+      .ai-layout { grid-template-columns:1fr; }
+      .chat-panel { height: 480px; }
+    }
+  </style>
+</head>
+<body>
+
+  
+<div class="cursor" id="cursor"></div>    
+<div class="cursor-dot" id="cursorDot"></div>
+
+
+<aside class="sidebar">
+  <div class="sidebar-logo"><h1>WATT<br>WISE</h1><p>Energy Monitor</p></div>
+  <div class="sidebar-user">
+    <div class="avatar" id="avatarEl">—</div>
+    <div class="sidebar-user-info"><span id="sidebarUser">—</span><small id="sidebarRole">—</small></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a class="nav-item" data-page="dashboard"><i class="fas fa-gauge-high"></i> Dashboard</a>
+    <a class="nav-item" data-page="live"><i class="fas fa-bolt"></i> Live Usage</a>
+    <a class="nav-item" data-page="consumption"><i class="fas fa-chart-line"></i> Consumption Trend</a>
+    <div class="nav-section-label">Analysis</div>
+    <a class="nav-item" data-page="forecast"><i class="fas fa-brain"></i> ML Forecast</a>
+    <a class="nav-item" data-page="lstm_dashboard"><i class="fas fa-wave-square"></i> LSTM Dashboard</a>
+    <a class="nav-item" data-page="ai_assistant"><i class="fas fa-robot"></i> AI Assistant</a>
+    <a class="nav-item" data-page="anomalies"><i class="fas fa-triangle-exclamation"></i> Anomalies</a>
+    <div class="nav-section-label">Blocks</div>
+    <a class="nav-item" data-page="block_gh"><i class="fas fa-venus"></i> Block GH</a>
+    <a class="nav-item" data-page="block_bh"><i class="fas fa-mars"></i> Block BH</a>
+    <a class="nav-item" data-page="block_ab1"><i class="fas fa-building-columns"></i> Block AB1</a>
+    <a class="nav-item" data-page="block_ab2"><i class="fas fa-building"></i> Block AB2</a>
+    <a class="nav-item" data-page="block_adm"><i class="fas fa-landmark"></i> Block ADMIN</a>
+    <div class="nav-section-label">Account</div>
+    <a class="nav-item" data-page="switch_user"><i class="fas fa-users-gear"></i> User Management</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <a class="nav-item danger" id="logoutBtn"><i class="fas fa-right-from-bracket"></i> Sign Out</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h2>AI ENERGY ASSISTANT</h2>
+      <p>Powered by Claude · full campus context · secure backend proxy · multi-turn chat</p>
+    </div>
+    <div class="topbar-right">
+      <span><span class="status-dot"></span>AI Online</span>
+      <span id="msgCount" style="font-size:0.63rem;color:var(--text3)">0 messages</span>
+    </div>
+  </div>
+
+  <div class="ai-layout">
+    <div class="chat-panel">
+      <div class="chat-header">
+        <div class="chat-avatar"><i class="fas fa-robot"></i></div>
+        <div>
+          <h3>WATTWISE AI ANALYST</h3>
+          <p>All campus data loaded · Jan 06–12, 2025</p>
+        </div>
+        <div class="status-badge"><div class="dot"></div>ONLINE</div>
+        <button class="clear-btn" onclick="clearChat()"><i class="fas fa-trash"></i> Clear</button>
+      </div>
+
+      <div class="chat-messages" id="chatMessages"></div>
+
+      <div class="chips-bar" id="chipsBar">
+        <span class="chip" onclick="useChip(this)">Which block uses the most energy?</span>
+        <span class="chip" onclick="useChip(this)">Why does AB2 consume so much?</span>
+        <span class="chip" onclick="useChip(this)">Explain the weekend zero pattern</span>
+        <span class="chip" onclick="useChip(this)">How can Block ADMIN reduce costs?</span>
+        <span class="chip" onclick="useChip(this)">Compare Girls vs Block BH usage</span>
+        <span class="chip" onclick="useChip(this)">Forecast next week Total Usage</span>
+        <span class="chip" onclick="useChip(this)">What does 94.2% model accuracy mean?</span>
+        <span class="chip" onclick="useChip(this)">Top 3 cost reduction recommendations</span>
+      </div>
+
+      <div class="chat-input-row">
+        <input class="chat-input" id="chatInput" type="text"
+               placeholder="Ask about energy data, costs, anomalies, forecasts…"
+               maxlength="500" autocomplete="off"
+               onkeydown="if(event.key==='Enter')sendMessage()"/>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+          <i class="fas fa-paper-plane"></i> SEND
+        </button>
+      </div>
+    </div>
+
+    <div class="side-panel">
+      <div class="card">
+        <div class="card-label"><i class="fas fa-database"></i> Loaded Context</div>
+        <div style="margin-top:8px">
+          <div class="mrow"><span class="mrow-lbl">Campus blocks</span><span class="mrow-val">5</span></div>
+          <div class="mrow"><span class="mrow-lbl">Week total</span><span class="mrow-val">4,081 kWh</span></div>
+          <div class="mrow"><span class="mrow-lbl">Est. cost</span><span class="mrow-val">&#8377;34,689</span></div>
+          <div class="mrow"><span class="mrow-lbl">Anomalies</span><span class="mrow-val" style="color:var(--danger)">4</span></div>
+          <div class="mrow"><span class="mrow-lbl">Model acc.</span><span class="mrow-val">94.2%</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label"><i class="fas fa-bolt"></i> Top Energy Users</div>
+        <div style="margin-top:8px">
+          <div class="mrow"><span class="mrow-lbl">Block AB2</span><span class="mrow-val" style="color:var(--danger)">1,234 kWh</span></div>
+          <div class="mrow"><span class="mrow-lbl">Block ADMIN</span><span class="mrow-val">1,150 kWh</span></div>
+          <div class="mrow"><span class="mrow-lbl">Block AB1</span><span class="mrow-val">621 kWh</span></div>
+          <div class="mrow"><span class="mrow-lbl">Block GH</span><span class="mrow-val">553 kWh</span></div>
+          <div class="mrow"><span class="mrow-lbl">Block BH</span><span class="mrow-val">521 kWh</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label"><i class="fas fa-lightbulb"></i> Suggested Questions</div>
+        <div style="margin-top:8px;display:flex;flex-direction:column;gap:5px">
+          <div class="suggestion" onclick="fillAndSend(this)">? Why do Girls and Block BH differ?</div>
+          <div class="suggestion" onclick="fillAndSend(this)">? Which appliance costs the most campus-wide?</div>
+          <div class="suggestion" onclick="fillAndSend(this)">? What's the payback period for solar on AB2?</div>
+          <div class="suggestion" onclick="fillAndSend(this)">? Summarise all anomalies in one paragraph</div>
+          <div class="suggestion" onclick="fillAndSend(this)">? Compare LSTM vs XGBoost for this dataset</div>
+        </div>
+      </div>
+
+      <div class="card" style="border-color:var(--danger)">
+        <div class="card-label" style="color:var(--danger)"><i class="fas fa-triangle-exclamation"></i> Active Anomalies</div>
+        <div class="anomaly-item" style="margin-top:8px"><i class="fas fa-circle-exclamation"></i><span>AB2 PCs — 225 kWh/day</span><small style="color:var(--danger)">HIGH</small></div>
+        <div class="anomaly-item"><i class="fas fa-circle-exclamation"></i><span>Admin ACs — 71.9% block</span><small style="color:var(--danger)">HIGH</small></div>
+        <div class="anomaly-item"><i class="fas fa-triangle-exclamation"></i><span>G-H peak vs B-H off-peak pattern</span><small style="color:var(--warn)">WATCH</small></div>
+      </div>
+
+      <div class="card">
+        <div class="card-label"><i class="fas fa-clock"></i> Session</div>
+        <div class="token-bar"><span>Messages sent</span><span id="sentCount">0</span></div>
+        <div class="token-bar" style="border-bottom:none"><span>History turns</span><span id="histCount">0</span></div>
+        <button class="btn btn-full" style="margin-top:8px;font-size:0.62rem" onclick="navigate('lstm_dashboard')">
+          <i class="fas fa-wave-square"></i> LSTM Dashboard
+        </button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="../js/shared.js"></script>
+<script>
+let history   = [];
+let isBusy    = false;
+let sentCount = 0;
+const username = localStorage.getItem('username') || 'User';
+
+document.addEventListener('DOMContentLoaded', () => {
+  initSidebar('ai_assistant');
+  appendAI(`**WattWise AI online.**\n\nI have full context for your campus — **4,081 kWh** across 5 blocks, week of Jan 06–12, 2025. **4 anomalies** detected. LSTM model accuracy: **94.2%**.\n\nBlock GH: **553.1 kWh** (peak Mon/Wed/Fri at 92–94 kWh). Block BH: **521.1 kWh** (peak Thu/Fri at 89–93 kWh).\n\nAsk me anything about energy usage, cost reduction, anomalies, or forecasts.`);
+});
+
+async function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const text  = input.value.trim();
+  if (!text || isBusy) return;
+
+  input.value = '';
+  isBusy = true;
+  document.getElementById('sendBtn').disabled = true;
+  document.getElementById('chipsBar').style.display = 'none';
+
+  appendUser(text);
+  history.push({ role: 'user', content: text });
+  sentCount++;
+  updateCounters();
+  showTyping();
+
+  const token = localStorage.getItem('token');
+  if (!token) {
+    removeTyping();
+    appendAI('? **Not logged in.** Please log in again.');
+    isBusy = false;
+    document.getElementById('sendBtn').disabled = false;
+    return;
+  }
+
+  try {
+    const res = await fetch('http://localhost:5000/ai/chat', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body:    JSON.stringify({ messages: history })
+    });
+    const data = await res.json();
+
+    removeTyping();
+    if (!data.success) {
+      appendAI('? **Backend error:** ' + (data.message || 'Unknown error.'));
+    } else {
+      appendAI(data.reply);
+      history.push({ role: 'assistant', content: data.reply });
+      if (history.length > 20) history = history.slice(-20);
+      updateCounters();
+    }
+  } catch {
+    removeTyping();
+    appendAI(`? **Cannot reach backend** on port 5000.\n\nMake sure your server is running:\n\`node server.js\``);
+  } finally {
+    isBusy = false;
+    document.getElementById('sendBtn').disabled = false;
+    document.getElementById('chatInput').focus();
+  }
+}
+
+function appendUser(text) {
+  const box = document.getElementById('chatMessages');
+  const el  = document.createElement('div');
+  el.className = 'msg user';
+  el.innerHTML = `
+    <div class="msg-av">${esc(username[0].toUpperCase())}</div>
+    <div>
+      <div class="msg-bbl">${esc(text)}</div>
+      <div class="msg-ts">${now()}</div>
+    </div>`;
+  box.appendChild(el);
+  box.scrollTop = box.scrollHeight;
+}
+
+function appendAI(text) {
+  const box = document.getElementById('chatMessages');
+  const el  = document.createElement('div');
+  el.className = 'msg ai';
+  el.innerHTML = `
+    <div class="msg-av"><i class="fas fa-robot"></i></div>
+    <div>
+      <div class="msg-bbl">${md(text)}</div>
+      <div class="msg-ts">${now()}</div>
+    </div>`;
+  box.appendChild(el);
+  box.scrollTop = box.scrollHeight;
+}
+
+function showTyping() {
+  const box = document.getElementById('chatMessages');
+  const el  = document.createElement('div');
+  el.className = 'msg ai';
+  el.id = 'typingMsg';
+  el.innerHTML = `
+    <div class="msg-av"><i class="fas fa-robot"></i></div>
+    <div class="msg-bbl">
+      <div class="typing-wrap">
+        <div class="t-dot"></div><div class="t-dot"></div><div class="t-dot"></div>
+      </div>
+    </div>`;
+  box.appendChild(el);
+  box.scrollTop = box.scrollHeight;
+}
+
+function removeTyping() { document.getElementById('typingMsg')?.remove(); }
+
+function clearChat() {
+  history   = [];
+  sentCount = 0;
+  isBusy    = false;
+  document.getElementById('chatMessages').innerHTML = '';
+  document.getElementById('chipsBar').style.display = 'flex';
+  document.getElementById('sendBtn').disabled = false;
+  updateCounters();
+  appendAI('Chat cleared. Ready for new questions about your campus energy data.');
+}
+
+function useChip(el) {
+  document.getElementById('chatInput').value = el.textContent.trim();
+  sendMessage();
+}
+
+function fillAndSend(el) {
+  document.getElementById('chatInput').value = el.textContent.replace(/^\??\s*/, '').trim();
+  sendMessage();
+}
+
+function updateCounters() {
+  document.getElementById('msgCount').textContent  = sentCount + ' message' + (sentCount !== 1 ? 's' : '');
+  document.getElementById('sentCount').textContent = sentCount;
+  document.getElementById('histCount').textContent = history.length;
+}
+
+function md(text) {
+  return text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\n\n/g, '<br><br>')
+    .replace(/\n/g, '<br>');
+}
+
+function esc(t) {
+  return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function now() {
+  return new Date().toLocaleTimeString('en-IN', { timeStyle: 'short' });
+}
+</script>
+</body>
+</html>
+

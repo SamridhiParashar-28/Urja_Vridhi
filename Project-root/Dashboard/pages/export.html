@@ -1,0 +1,156 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>WattWise  Export Report</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+<link rel="stylesheet" href="../css/shared.css"/>
+</head><body>
+
+  <div class="cursor" id="cursor"></div>    
+<div class="cursor-dot" id="cursorDot"></div>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h1>WATT<br>WISE</h1>
+    <p>Energy Monitor</p>
+  </div>
+  <div class="sidebar-user">
+    <div class="avatar" id="avatarEl"></div>
+    <div class="sidebar-user-info">
+      <span id="sidebarUser"></span>
+      <small id="sidebarRole"></small>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a class="nav-item" data-page="dashboard"><i class="fas fa-gauge-high"></i> Dashboard</a>
+    <a class="nav-item" data-page="live"><i class="fas fa-bolt"></i> Live Usage</a>
+    <a class="nav-item" data-page="consumption"><i class="fas fa-chart-line"></i> Consumption Trend</a>
+
+    <div class="nav-section-label">Analysis</div>
+    <a class="nav-item" data-page="forecast"><i class="fas fa-brain"></i> ML Forecast</a>
+    <a class="nav-item" data-page="lstm_dashboard"><i class="fas fa-wave-square"></i> LSTM Dashboard</a>
+    <a class="nav-item" data-page="ai_assistant"><i class="fas fa-robot"></i> AI Assistant</a>
+    <a class="nav-item" data-page="anomalies"><i class="fas fa-triangle-exclamation"></i> Anomalies</a>
+
+    <div class="nav-section-label">Blocks</div>
+    <a class="nav-item" data-page="block_gh"><i class="fas fa-venus"></i> Block GH</a>
+    <a class="nav-item" data-page="block_bh"><i class="fas fa-mars"></i> Block BH</a>
+    <a class="nav-item" data-page="block_ab1"><i class="fas fa-building-columns"></i> Block AB1</a>
+    <a class="nav-item" data-page="block_ab2"><i class="fas fa-building"></i> Block AB2</a>
+    <a class="nav-item" data-page="block_adm"><i class="fas fa-landmark"></i> Block ADMIN</a>
+
+    <div class="nav-section-label">Account</div>
+    <a class="nav-item" data-page="switch_user"><i class="fas fa-users-gear"></i> User Management</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <a class="nav-item danger" id="logoutBtn"><i class="fas fa-right-from-bracket"></i> Sign Out</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left"><h2>EXPORT REPORT</h2><p>Download data as CSV</p></div>
+  </div>
+  <p class="section-title">Available Exports</p>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-label"><i class="fas fa-file-csv"></i> Daily Consumption  All Blocks</div>
+      <div class="card-sub" style="margin:8px 0">7 days  5 blocks  includes kWh per day</div>
+      <button class="btn btn-full" onclick="exportDaily()"><i class="fas fa-download"></i> Download CSV</button>
+    </div>
+    <div class="card">
+      <div class="card-label"><i class="fas fa-file-csv"></i> Appliance Breakdown</div>
+      <div class="card-sub" style="margin:8px 0">Per block  appliance name + total kWh</div>
+      <button class="btn btn-full" onclick="exportAppliances()"><i class="fas fa-download"></i> Download CSV</button>
+    </div>
+    <div class="card">
+      <div class="card-label"><i class="fas fa-file-csv"></i> Billing Summary</div>
+      <div class="card-sub" style="margin:8px 0">Block  kWh  rate  cost estimate</div>
+      <button class="btn btn-full" onclick="exportBilling()"><i class="fas fa-download"></i> Download CSV</button>
+    </div>
+    <div class="card">
+      <div class="card-label"><i class="fas fa-file-csv"></i> Full Dataset (All Rows)</div>
+      <div class="card-sub" style="margin:8px 0">All 324 rows  date, block, room, appliance, kWh, temp</div>
+      <button class="btn btn-full" onclick="exportFull()"><i class="fas fa-download"></i> Download CSV</button>
+    </div>
+  </div>
+  <div id="exportMsg" style="margin-top:1rem;font-size:0.78rem;color:var(--accent2)"></div>
+</main>
+
+<script src="../js/shared.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  initSidebar('export');
+
+  if (!isAdmin()) {
+    document.querySelector('.main').innerHTML = `
+      <div class="topbar">
+        <div class="topbar-left">
+          <h2><i class="fas fa-lock" style="color:var(--danger);margin-right:8px"></i>ACCESS RESTRICTED</h2>
+          <p>Admin role required to export reports</p>
+        </div>
+      </div>
+      <div class="card" style="max-width:520px;margin-top:1rem;border-color:var(--danger);background:rgba(255,51,85,0.04)">
+        <div class="card-label" style="color:var(--danger)"><i class="fas fa-shield-halved"></i> Viewer Account</div>
+        <p style="font-size:0.82rem;color:var(--text3);margin-top:10px;line-height:1.8">
+          Your account has <strong style="color:#0099cc">View Only</strong> access.<br>
+          Exporting reports requires an <strong style="color:var(--accent2)">Admin</strong> account.<br><br>
+          Contact your administrator to upgrade your role.
+        </p>
+        <button class="btn btn-full" style="margin-top:14px;border-color:var(--accent3)" onclick="navigate('dashboard')">
+          <i class="fas fa-gauge-high"></i> &nbsp;Back to Dashboard
+        </button>
+      </div>`;
+    return;
+  }
+});
+
+function msg(t) {
+  document.getElementById('exportMsg').textContent = '? ' + t + ' downloaded.';
+}
+
+function exportDaily() {
+  const rows = [['Date', 'Block', 'kWh']];
+  WW.dates.forEach((d, i) => {
+    ['G-H', 'B-H', 'AB1', 'AB2', 'ADMIN'].forEach(b => {
+      rows.push([d, WW.blocks[b].label, WW.blocks[b].daily[i]]);
+    });
+  });
+  exportCSV(rows, 'wattwise_daily.csv');
+  msg('Daily consumption');
+}
+
+function exportAppliances() {
+  const rows = [['Block', 'Appliance', 'Total kWh', 'Est Cost (INR)']];
+  ['G-H', 'B-H', 'AB1', 'AB2', 'ADMIN'].forEach(b => {
+    WW.blocks[b].appliances.forEach(([name, kwh]) => {
+      rows.push([WW.blocks[b].label, name, kwh, (kwh * 8.5).toFixed(2)]);
+    });
+  });
+  exportCSV(rows, 'wattwise_appliances.csv');
+  msg('Appliance breakdown');
+}
+
+function exportBilling() {
+  const rows = [['Block', 'Total kWh', 'Rate', 'Amount (INR)']];
+  ['G-H', 'B-H', 'AB1', 'AB2', 'ADMIN'].forEach(b => {
+    const B = WW.blocks[b];
+    rows.push([B.label, B.total, B.rate, (B.total * B.rate).toFixed(2)]);
+  });
+  exportCSV(rows, 'wattwise_billing.csv');
+  msg('Billing summary');
+}
+
+function exportFull() {
+  const rows = [['Date', 'Block', 'Total kWh']];
+  WW.dates.forEach((d, i) => {
+    ['G-H', 'B-H', 'AB1', 'AB2', 'ADMIN'].forEach(b => {
+      rows.push([d, b, WW.blocks[b].daily[i]]);
+    });
+  });
+  exportCSV(rows, 'wattwise_full.csv');
+  msg('Full dataset');
+}
+</script>
+</body>
+</html>

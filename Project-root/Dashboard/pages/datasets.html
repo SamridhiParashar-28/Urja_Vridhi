@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>WattWise – Datasets</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/shared.css"/>
+  <style>
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+    .dataset-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .dataset-card:hover {
+      border-color: var(--accent3);
+      box-shadow: 0 4px 12px rgba(0,255,65,0.05);
+    }
+    .dataset-card.active-ds {
+      border-color: var(--accent);
+      box-shadow: 0 0 15px rgba(0,255,65,0.15);
+    }
+    .dataset-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .dataset-title {
+      font-family: var(--font-head);
+      color: var(--accent);
+      font-size: 1.2rem;
+    }
+    .dataset-desc {
+      font-size: 0.75rem;
+      color: var(--text3);
+      margin-bottom: 1rem;
+    }
+    .dataset-role {
+      font-size: 0.6rem;
+      padding: 3px 8px;
+      background: rgba(0,255,65,0.05);
+      border: 1px solid var(--accent3);
+      color: var(--accent2);
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .btn {
+      background: transparent;
+      border: 1px solid var(--accent3);
+      color: var(--accent2);
+      padding: 8px 16px;
+      cursor: pointer;
+      font-family: var(--font-main);
+      transition: all 0.2s;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .btn:hover {
+      background: rgba(0,255,65,0.08);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .btn-primary {
+      background: rgba(0,255,65,0.05);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .btn-primary:hover {
+      background: var(--accent);
+      color: var(--bg);
+    }
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 1rem;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal.show { display: flex; }
+    .modal-content {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 2rem;
+      width: 400px;
+      max-width: 90%;
+      border-radius: 6px;
+      box-shadow: 0 0 30px rgba(0,255,65,0.1);
+    }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label {
+      display: block;
+      color: var(--text3);
+      font-size: 0.7rem;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 10px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font-main);
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    
+    .passkey-box {
+      background: #011101;
+      padding: 15px;
+      border: 1px dashed var(--accent);
+      color: var(--accent);
+      font-family: monospace;
+      font-size: 0.9rem;
+      word-break: break-all;
+      margin-top: 10px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="cursor" id="cursor"></div>    
+<div class="cursor-dot" id="cursorDot"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo"><h1>WATT<br>WISE</h1><p>Energy Monitor</p></div>
+  <div class="sidebar-user">
+    <div class="avatar" id="avatarEl">—</div>
+    <div class="sidebar-user-info">
+      <span id="sidebarUser">—</span>
+      <small id="sidebarRole">—</small>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a class="nav-item" data-page="dashboard"><i class="fas fa-gauge-high"></i> Dashboard</a>
+    <a class="nav-item" data-page="live"><i class="fas fa-bolt"></i> Live Usage</a>
+    <a class="nav-item" data-page="consumption"><i class="fas fa-chart-line"></i> Consumption Trend</a>
+
+    <div class="nav-section-label">Analysis</div>
+    <a class="nav-item" data-page="forecast"><i class="fas fa-brain"></i> ML Forecast</a>
+    <a class="nav-item" data-page="lstm_dashboard"><i class="fas fa-wave-square"></i> LSTM Dashboard</a>
+    <a class="nav-item" data-page="ai_assistant"><i class="fas fa-robot"></i> AI Assistant</a>
+    <a class="nav-item" data-page="anomalies"><i class="fas fa-triangle-exclamation"></i> Anomalies</a>
+
+    <div class="nav-section-label">Blocks</div>
+    <a class="nav-item" data-page="block_gh"><i class="fas fa-venus"></i> Block GH</a>
+    <a class="nav-item" data-page="block_bh"><i class="fas fa-mars"></i> Block BH</a>
+    <a class="nav-item" data-page="block_ab1"><i class="fas fa-building-columns"></i> Block AB1</a>
+    <a class="nav-item" data-page="block_ab2"><i class="fas fa-building"></i> Block AB2</a>
+    <a class="nav-item" data-page="block_adm"><i class="fas fa-landmark"></i> Block ADMIN</a>
+
+    <div class="nav-section-label">Account</div>
+    <a class="nav-item" data-page="switch_user"><i class="fas fa-users-gear"></i> User Management</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <a class="nav-item danger" id="logoutBtn"><i class="fas fa-right-from-bracket"></i> Sign Out</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h2>DATASET MANAGER</h2>
+      <p>End-to-End Encrypted Campus Energy Datasets</p>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-primary" onclick="openCreateModal()"><i class="fas fa-plus"></i> New Dataset</button>
+      <button class="btn" onclick="openJoinModal()"><i class="fas fa-link"></i> Join with Passkey</button>
+    </div>
+  </div>
+
+  <div class="grid" id="datasetList">
+    <!-- Datasets go here -->
+    <p style="color:var(--text3)">Loading your datasets...</p>
+  </div>
+  
+  <p class="section-title" style="margin-top: 2rem;">Active Dataset Seeding</p>
+  <div class="dataset-card">
+    <p class="dataset-desc">Use this button to securely encrypt and push the default Watt-Wise dummy data into your currently active dataset. This seeds it with real-looking stats for ML forecasting.</p>
+    <button class="btn btn-primary" onclick="seedActiveDataset()"><i class="fas fa-seedling"></i> Seed Current Campus Data</button>
+    <span id="seedStatus" style="margin-left:10px;font-size:0.75rem;color:var(--accent2)"></span>
+  </div>
+</main>
+
+<!-- Create Dataset Modal -->
+<div class="modal" id="createModal">
+  <div class="modal-content">
+    <h3 style="color:var(--accent);margin-bottom:1.5rem">Create Secure Dataset</h3>
+    <div class="form-group">
+      <label>Dataset Name</label>
+      <input type="text" id="createName" placeholder="e.g., Jan 2025 Energy Logs"/>
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <input type="text" id="createDesc" placeholder="Optional"/>
+    </div>
+    <div class="actions" style="justify-content: flex-end">
+      <button class="btn" onclick="closeModals()">Cancel</button>
+      <button class="btn btn-primary" onclick="createDataset()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Join Dataset Modal -->
+<div class="modal" id="joinModal">
+  <div class="modal-content">
+    <h3 style="color:var(--accent);margin-bottom:1.5rem">Join Dataset</h3>
+    <p style="font-size:0.75rem;color:var(--text3);margin-bottom:1rem">Enter the 10-character passkey provided by the dataset Admin. It expires in 15 minutes.</p>
+    <div class="form-group">
+      <label>Passkey (10-character code)</label>
+      <input type="text" id="joinPasskey" placeholder="e.g. A3F9B2C0D1" maxlength="10" style="letter-spacing:2px;text-transform:uppercase"/>
+    </div>
+    <div class="actions" style="justify-content: flex-end">
+      <button class="btn" onclick="closeModals()">Cancel</button>
+      <button class="btn btn-primary" onclick="joinDataset()">Join</button>
+    </div>
+  </div>
+</div>
+
+<!-- Share Dataset Modal -->
+<!-- Backdrop: click on backdrop does nothing (no close on backdrop click for passkey safety) -->
+<div id="shareModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center;" onclick="event.stopPropagation()">
+  <div class="modal-content" style="position:relative" onclick="event.stopPropagation()">
+    <!-- X button always in top right -->
+    <button id="shareCloseBtn" onclick="closeShareModal()" style="
+      position:absolute; top:12px; right:12px;
+      background:transparent; border:1px solid var(--border);
+      color:var(--text3); width:28px; height:28px;
+      border-radius:4px; cursor:pointer; font-size:0.9rem;
+      display:flex; align-items:center; justify-content:center;
+      transition: all 0.2s;
+    " onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" 
+       onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'">
+      <i class="fas fa-times"></i>
+    </button>
+
+    <h3 style="color:var(--accent);margin-bottom:1rem;padding-right:2rem">Share Dataset</h3>
+    <p style="font-size:0.75rem;color:var(--warn);margin-bottom:1rem">
+      <i class="fas fa-exclamation-triangle"></i> Share this <strong>10-character passkey</strong> with your collaborator.
+      It expires in <strong>15 minutes</strong> and can only be used once.
+    </p>
+    <div class="passkey-box" id="sharePasskeyDisplay">Generating...</div>
+    <p style="font-size:0.7rem;color:var(--text3);margin-top:0.75rem">
+      <i class="fas fa-lock"></i> Share this code with your collaborator. Click <strong style="color:var(--accent2)">✕</strong> to close when done.
+    </p>
+    <div class="actions" style="justify-content: flex-end; margin-top: 1rem;">
+      <button class="btn btn-primary" id="shareCopyBtn" onclick="copyPasskey()">
+        <i class="fas fa-copy"></i> Copy Passkey
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/shared.js"></script>
+<script>
+  const API_BASE = 'http://localhost:5000';
+  let datasets = [];
+
+  document.addEventListener("DOMContentLoaded", () => {
+    initSidebar('datasets');
+    loadDatasets();
+
+    // Block ALL keys when the share modal is open (prevents any keyboard shortcut
+    // from inadvertently dismissing the modal containing the sensitive decryption key)
+    document.addEventListener('keydown', e => {
+      if (document.getElementById('shareModal').style.display === 'flex') {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+      }
+    }, true);
+  });
+
+  async function loadDatasets() {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${API_BASE}/datasets`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const data = await res.json();
+      if (data.success) {
+        datasets = data.datasets;
+        renderDatasets();
+      }
+    } catch(e) {
+      document.getElementById('datasetList').innerHTML = `<p style="color:var(--danger)">Failed to load datasets.</p>`;
+    }
+  }
+
+  function renderDatasets() {
+    const list = document.getElementById('datasetList');
+    const activeId = localStorage.getItem('activeDatasetId');
+
+    if (datasets.length === 0) {
+      list.innerHTML = `<p style="color:var(--text3)">No datasets found. Create or join one to begin.</p>`;
+      return;
+    }
+
+    list.innerHTML = datasets.map(d => {
+      const isActive = activeId == d.id;
+      const roleStr = d.role === 'admin' ? '<i class="fas fa-crown"></i> Admin' : d.role;
+      return `
+        <div class="dataset-card ${isActive ? 'active-ds' : ''}">
+          <div class="dataset-header">
+            <span class="dataset-title">${d.name}</span>
+            <span class="dataset-role">${roleStr}</span>
+          </div>
+          <div class="dataset-desc">${d.description || 'No description provided.'}</div>
+          <div class="dataset-desc" style="font-size:0.6rem; color:var(--accent3)">Created: ${new Date(d.created_at).toLocaleDateString()}</div>
+          <div class="actions">
+            ${!isActive ? `<button class="btn btn-primary" onclick="setActiveDataset(${d.id})">Set Active</button>` : `<button class="btn" disabled>Active</button>`}
+            ${d.role === 'admin' ? `<button class="btn" onclick="openShareModal(${d.id})"><i class="fas fa-share-nodes"></i> Share</button>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+    // Auto-set active if there is none
+    if (!activeId && datasets.length > 0) setActiveDataset(datasets[0].id);
+  }
+
+  function setActiveDataset(id) {
+    const d = datasets.find(ds => ds.id == id);
+    if (d) {
+      localStorage.setItem('activeDatasetId', id);
+      localStorage.setItem('activeDatasetName', d.name);
+      // Bug Fix #7: persist the user's role so the sidebar always shows the correct role
+      localStorage.setItem('activeDatasetRole', d.role || 'viewer');
+      renderDatasets();
+      // Ensure shared.js can pick up the change if we add a refresh function
+      if (typeof updateActiveDatasetDisplay === 'function') updateActiveDatasetDisplay();
+      // Refresh sidebar role display immediately
+      const sidebarRole = document.getElementById('sidebarRole');
+      if (sidebarRole && d.role) {
+        const roleTxt = d.role.charAt(0).toUpperCase() + d.role.slice(1);
+        sidebarRole.textContent = `Role: ${roleTxt}`;
+        sidebarRole.style.color = 'var(--accent2)';
+      }
+    }
+  }
+
+  // Modals
+  function openCreateModal() { document.getElementById('createModal').classList.add('show'); }
+  function openJoinModal() { document.getElementById('joinModal').classList.add('show'); }
+  
+  // Close all modals EXCEPT share modal (share only closes via copyPasskey)
+  function closeModals() {
+    document.querySelectorAll('.modal:not(#shareModal)').forEach(m => m.classList.remove('show'));
+  }
+  
+  function closeShareModal() {
+    document.getElementById('shareModal').style.display = 'none';
+    // Reset for next use
+    document.getElementById('sharePasskeyDisplay').textContent = 'Generating...';
+    const copyBtn = document.getElementById('shareCopyBtn');
+    copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy Passkey';
+    copyBtn.style.background = '';
+    copyBtn.style.color = '';
+    copyBtn.disabled = false;
+  }
+
+  async function copyPasskey() {
+    const disp = document.getElementById('sharePasskeyDisplay');
+    const text = disp.textContent || disp.innerText;
+    if (!text || text.trim() === 'Generating...' || text.startsWith('✗')) return;
+
+    const copyBtn = document.getElementById('shareCopyBtn');
+    try {
+      await navigator.clipboard.writeText(text.trim());
+      // Show success — modal stays open until user clicks X
+      copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+      copyBtn.style.background = 'var(--accent)';
+      copyBtn.style.color = 'var(--bg)';
+      copyBtn.disabled = true;
+    } catch (e) {
+      // Fallback: select the text so user can Ctrl+C
+      const range = document.createRange();
+      range.selectNodeContents(disp);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+      copyBtn.innerHTML = '<i class="fas fa-hand-pointer"></i> Selected! Press Ctrl+C';
+    }
+  }
+
+  // Key helpers: convert between hex (used by backend) and base64 (used for display/storage)
+  function hexToB64(hex) {
+    const bytes = new Uint8Array(hex.match(/.{2}/g).map(b => parseInt(b, 16)));
+    return btoa(String.fromCharCode(...bytes));
+  }
+  function b64ToHex(b64) {
+    return Array.from(atob(b64), c => c.charCodeAt(0).toString(16).padStart(2,'0')).join('');
+  }
+
+  async function createDataset() {
+    const name = document.getElementById('createName').value;
+    const desc = document.getElementById('createDesc').value;
+    if (!name) return alert('Name is required');
+
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${API_BASE}/datasets`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ name, description: desc })
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Store key as Base64 (shorter) — convert from hex returned by backend
+        localStorage.setItem(`ds_key_${data.datasetId}`, hexToB64(data.key));
+        
+        closeModals();
+        document.getElementById('createName').value = '';
+        document.getElementById('createDesc').value = '';
+        loadDatasets();
+      } else {
+        alert('Failed: ' + data.message);
+      }
+    } catch(e) { console.error(e); }
+  }
+
+  async function joinDataset() {
+    const passkey = document.getElementById('joinPasskey').value.trim().toUpperCase();
+    if (!passkey || passkey.length !== 10) return alert('Please enter the 10-character passkey.');
+
+    const token = localStorage.getItem("token");
+    
+    try {
+      const res = await fetch(`${API_BASE}/datasets/join`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ otp_code: passkey })
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Key is returned directly from the backend (stored during invite creation)
+        if (data.key) {
+          localStorage.setItem(`ds_key_${data.dataset_id}`, data.key);
+        }
+        localStorage.setItem('activeDatasetRole', 'viewer');
+        closeModals();
+        document.getElementById('joinPasskey').value = '';
+        loadDatasets();
+      } else {
+        alert('Join failed: ' + data.message);
+      }
+    } catch(e) { console.error(e); }
+  }
+
+  async function openShareModal(datasetId) {
+    // Bug Fix #4: always reset the copy button BEFORE opening so a re-open shows a clean state
+    const copyBtn = document.getElementById('shareCopyBtn');
+    copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy Passkey';
+    copyBtn.style.background = '';
+    copyBtn.style.color = '';
+    copyBtn.disabled = false;
+
+    document.getElementById('shareModal').style.display = 'flex';
+    const disp = document.getElementById('sharePasskeyDisplay');
+    disp.textContent = 'Generating...';
+
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${API_BASE}/datasets/${datasetId}/invite`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ key: localStorage.getItem(`ds_key_${datasetId}`) || null })
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Display just the 10-char OTP — key is stored server-side for 15 min
+        disp.textContent = data.otp_code;
+      } else {
+        disp.innerHTML = `<span style="color:red">✗ Failed: ${data.message}</span>`;
+      }
+    } catch(e) {
+      console.error(e);
+      disp.innerHTML = '<span style="color:red">✗ Network error. Is the backend running?</span>';
+    }
+  }
+
+  // --- Data Seeding Logic ---
+  async function seedActiveDataset() {
+    const activeId = localStorage.getItem('activeDatasetId');
+    if (!activeId) return alert('No active dataset set.');
+    
+    let localKeyB64 = localStorage.getItem(`ds_key_${activeId}`);
+    if (!localKeyB64) {
+      // Auto-recover missing key so seeding isn't blocked (store as Base64)
+      const raw = crypto.getRandomValues(new Uint8Array(32));
+      localKeyB64 = btoa(String.fromCharCode(...raw));
+      localStorage.setItem(`ds_key_${activeId}`, localKeyB64);
+    }
+    // Convert Base64 → hex for backend (also handle legacy 64-char hex keys)
+    const localKey = localKeyB64.length === 64 && /^[0-9a-f]+$/i.test(localKeyB64)
+      ? localKeyB64
+      : b64ToHex(localKeyB64);
+
+    const status = document.getElementById('seedStatus');
+    status.textContent = "Uploading Data...";
+
+    try {
+      // WW object comes from shared.js
+      const defaultDataArray = Object.keys(WW.blocks).map(k => ({
+         blockKey: k,
+         label: WW.blocks[k].label,
+         usage: WW.blocks[k].avg
+      }));
+      
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/datasets/${activeId}/entries`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json', 
+          'Authorization': `Bearer ${token}`,
+          'X-Encryption-Key': localKey
+        },
+        body: JSON.stringify({ content: defaultDataArray })
+      });
+      const data = await res.json();
+      
+      if(data.success) {
+        status.style.color = 'var(--accent)';
+        status.textContent = "✓ Success! Backend received, encrypted, and saved it.";
+      } else {
+         status.style.color = 'var(--danger)';
+         status.textContent = "Failed: " + data.message;
+      }
+    } catch(e) {
+      console.error(e);
+      status.textContent = "Error occurred.";
+    }
+  }
+</script>
+</body>
+</html>

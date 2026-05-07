@@ -1,0 +1,419 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>WattWise  User Management &amp; Sign Out</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+<link rel="stylesheet" href="../css/shared.css"/>
+<style>
+  /* ── Role badges ── */
+  .role-badge { display:inline-block; padding:2px 10px; font-size:0.58rem; letter-spacing:2px; border:1px solid; }
+  .role-admin  { background:rgba(0,255,65,0.10);  border-color:var(--accent3); color:var(--accent2); }
+  .role-editor { background:rgba(255,170,0,0.08); border-color:#664400;        color:var(--warn); }
+  .role-viewer { background:rgba(0,170,255,0.08); border-color:#004466;        color:#0099cc; }
+  .role-you    { display:inline-block; padding:2px 8px; font-size:0.56rem; letter-spacing:1px;
+                 background:rgba(255,170,0,0.08); border:1px solid #664400; color:var(--warn); margin-left:6px; }
+
+  /* ── Members table ── */
+  .members-table { width:100%; border-collapse:collapse; font-size:0.72rem; margin-top:10px; }
+  .members-table th { text-align:left; padding:8px 12px; color:var(--text3); font-size:0.6rem;
+                      letter-spacing:2px; text-transform:uppercase; border-bottom:1px solid var(--border); }
+  .members-table td { padding:10px 12px; border-bottom:1px solid rgba(0,85,26,0.4); vertical-align:middle; }
+  .members-table tr:hover td { background:var(--glow2); }
+
+  /* ── Role selector ── */
+  .role-select { background:var(--bg3); border:1px solid var(--border); color:var(--accent2);
+                 font-family:var(--font-main); font-size:0.65rem; padding:4px 8px; cursor:pointer;
+                 letter-spacing:1px; transition:border-color 0.2s; }
+  .role-select:focus  { outline:none; border-color:var(--accent); }
+  .role-select:hover  { border-color:var(--accent3); }
+  .role-select:disabled { opacity:0.3; cursor:default; }
+
+  /* ── Action buttons ── */
+  .action-btn { padding:4px 12px; font-family:var(--font-main); font-size:0.62rem; letter-spacing:1px;
+                cursor:pointer; border:1px solid; transition:all 0.18s; background:transparent; margin-left:6px; }
+  .btn-save   { border-color:var(--accent3); color:var(--accent2); }
+  .btn-save:hover   { background:rgba(0,255,65,0.08); border-color:var(--accent); color:var(--accent); }
+  .btn-remove { border-color:#551122; color:var(--danger); }
+  .btn-remove:hover { background:rgba(255,51,85,0.08); border-color:var(--danger); }
+  .btn-disabled { opacity:0.25; pointer-events:none; }
+
+  /* ── Stats ── */
+  .stat-row  { display:flex; gap:1rem; margin-bottom:1.2rem; flex-wrap:wrap; }
+  .stat-pill { padding:6px 16px; background:var(--card); border:1px solid var(--border);
+               font-size:0.68rem; color:var(--text3); letter-spacing:1px; }
+  .stat-pill strong { color:var(--accent2); margin-left:6px; }
+
+  /* ── Viewer notice ── */
+  .viewer-notice { padding:12px 16px; background:rgba(0,170,255,0.06); border:1px solid #004466;
+                   font-size:0.72rem; color:#0099cc; letter-spacing:1px; margin-bottom:1.2rem; }
+
+  /* ── Toast ── */
+  .toast { position:fixed; bottom:2rem; right:2rem; padding:10px 20px; font-size:0.75rem;
+           letter-spacing:1px; z-index:9999; border:1px solid; animation:slideIn 0.25s ease; }
+  .toast-ok  { background:#001a00; border-color:var(--accent3); color:var(--accent2); }
+  .toast-err { background:#1a0008; border-color:var(--danger);  color:var(--danger);  }
+  @keyframes slideIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+  /* ── Confirm overlay ── */
+  .confirm-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.78); z-index:8000;
+                     display:flex; align-items:center; justify-content:center; }
+  .confirm-box { background:var(--card); border:1px solid var(--danger); padding:2rem 2.5rem;
+                 max-width:400px; width:90%; text-align:center; }
+  .confirm-box h3 { font-family:var(--font-head); font-size:1rem; color:var(--danger);
+                    margin-bottom:0.8rem; letter-spacing:2px; }
+  .confirm-box p  { font-size:0.78rem; color:var(--text3); margin-bottom:1.5rem; line-height:1.7; }
+  .confirm-btns   { display:flex; gap:0.8rem; justify-content:center; }
+
+  /* ── No dataset banner ── */
+  .no-dataset-banner { padding:1.5rem; background:rgba(255,170,0,0.05); border:1px solid #664400;
+                       color:var(--warn); font-size:0.78rem; line-height:1.8; }
+  .no-dataset-banner i { margin-right:8px; }
+
+  /* ── Section label ── */
+  .ds-label { font-size:0.62rem; color:var(--text3); letter-spacing:2px; text-transform:uppercase;
+              padding:4px 10px; background:var(--bg3); border:1px solid var(--border);
+              display:inline-block; margin-bottom:1rem; }
+</style>
+</head>
+<body>
+
+  <div class="cursor" id="cursor"></div>    
+<div class="cursor-dot" id="cursorDot"></div>
+
+<aside class="sidebar">
+  <div class="sidebar-logo"><h1>WATT<br>WISE</h1><p>Energy Monitor</p></div>
+  <div class="sidebar-user">
+    <div class="avatar" id="avatarEl">—</div>
+    <div class="sidebar-user-info">
+      <span id="sidebarUser">—</span>
+      <small id="sidebarRole">—</small>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a class="nav-item" data-page="dashboard"><i class="fas fa-gauge-high"></i> Dashboard</a>
+    <a class="nav-item" data-page="live"><i class="fas fa-bolt"></i> Live Usage</a>
+    <a class="nav-item" data-page="consumption"><i class="fas fa-chart-line"></i> Consumption Trend</a>
+    <div class="nav-section-label">Analysis</div>
+    <a class="nav-item" data-page="forecast"><i class="fas fa-brain"></i> ML Forecast</a>
+    <a class="nav-item" data-page="lstm_dashboard"><i class="fas fa-wave-square"></i> LSTM Dashboard</a>
+    <a class="nav-item" data-page="ai_assistant"><i class="fas fa-robot"></i> AI Assistant</a>
+    <a class="nav-item" data-page="anomalies"><i class="fas fa-triangle-exclamation"></i> Anomalies</a>
+    
+    <div class="nav-section-label">Blocks</div>
+    <a class="nav-item" data-page="block_gh"><i class="fas fa-venus"></i> Block GH</a>
+    <a class="nav-item" data-page="block_bh"><i class="fas fa-mars"></i> Block BH</a>
+    <a class="nav-item" data-page="block_ab1"><i class="fas fa-building-columns"></i> Block AB1</a>
+    <a class="nav-item" data-page="block_ab2"><i class="fas fa-building"></i> Block AB2</a>
+    <a class="nav-item" data-page="block_adm"><i class="fas fa-landmark"></i> Block ADMIN</a>
+    <div class="nav-section-label">Account</div>
+    <a class="nav-item active" data-page="switch_user"><i class="fas fa-users-gear"></i> User Management</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <a class="nav-item danger" id="logoutBtn"><i class="fas fa-right-from-bracket"></i> Sign Out</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h2>USER MANAGEMENT &amp; SIGN OUT</h2>
+      <p>Manage dataset access &middot; Session: <strong id="currentUserDisp" style="color:var(--accent2)">—</strong></p>
+    </div>
+    <div class="topbar-right">
+      <button class="btn" id="refreshBtn" onclick="loadMembers()"><i class="fas fa-rotate"></i> Refresh</button>
+    </div>
+  </div>
+
+  <!-- Current session card -->
+  <p class="section-title">Current Session</p>
+  <div class="card" style="max-width:460px;margin-bottom:1.5rem">
+    <div class="card-label"><i class="fas fa-user-circle"></i> Signed in as</div>
+    <div class="card-value" style="font-size:1.2rem;margin-top:4px" id="sessionUser">—</div>
+    <div style="margin-top:6px" id="sessionRole">—</div>
+    <button class="btn btn-full" style="margin-top:14px;border-color:var(--danger);color:var(--danger)" onclick="doLogout()">
+      <i class="fas fa-right-from-bracket"></i> Sign Out &amp; Switch Account
+    </button>
+  </div>
+
+  <!-- No active dataset warning -->
+  <div id="noDatasetBanner" style="display:none;margin-bottom:1.5rem">
+    <div class="no-dataset-banner">
+      <i class="fas fa-triangle-exclamation"></i>
+      <strong>No active dataset selected.</strong> Go to the
+      <a onclick="navigate('dataset_manager')" style="color:var(--accent2);cursor:pointer;text-decoration:underline">Dataset Manager</a>
+      and set a dataset as active to manage its members here.
+    </div>
+  </div>
+
+  <!-- Viewer notice (non-admin) -->
+  <div id="viewerNotice" style="display:none;margin-bottom:1.5rem">
+    <div class="viewer-notice">
+      <i class="fas fa-eye"></i> &nbsp;VIEW ONLY — Only the dataset Admin can manage members.
+    </div>
+  </div>
+
+  <!-- Members panel (visible to all members) -->
+  <div id="membersPanel" style="display:none">
+    <p class="section-title" id="membersPanelTitle">Dataset Members</p>
+
+    <!-- Stats (admin only) -->
+    <div class="stat-row" id="statsRow" style="display:none">
+      <div class="stat-pill">Total <strong id="statTotal">—</strong></div>
+      <div class="stat-pill">Admin <strong id="statAdmin">—</strong></div>
+      <div class="stat-pill">Editor <strong id="statEditor">—</strong></div>
+      <div class="stat-pill">Viewer <strong id="statViewer">—</strong></div>
+    </div>
+
+    <div class="card">
+      <div id="tableWrap">
+        <div style="font-size:0.72rem;color:var(--text3);padding:1.2rem 0;text-align:center">
+          <i class="fas fa-circle-notch fa-spin"></i> &nbsp;Loading members…
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Confirm remove overlay -->
+<div class="confirm-overlay" id="confirmOverlay" style="display:none">
+  <div class="confirm-box">
+    <h3><i class="fas fa-triangle-exclamation"></i> &nbsp;REMOVE MEMBER</h3>
+    <p>Are you sure you want to remove<br>
+      <strong id="confirmUsername" style="color:var(--accent);font-size:1rem">—</strong><br>
+      from this dataset?<br><br>
+      They will <strong style="color:var(--danger)">lose all access</strong> immediately.
+    </p>
+    <div class="confirm-btns">
+      <button class="btn" style="border-color:var(--border2);color:var(--text3)" onclick="closeConfirm()">
+        <i class="fas fa-xmark"></i> Cancel
+      </button>
+      <button class="action-btn btn-remove" style="padding:8px 20px" onclick="confirmRemove()">
+        <i class="fas fa-user-minus"></i> Remove
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/shared.js"></script>
+<script>
+const API = 'http://localhost:5000';
+let pendingRemove = null; // { userId, username }
+let myDatasetRole = null;
+let activeDatasetId = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  initSidebar('switch_user');
+
+  const me = localStorage.getItem('username') || 'Unknown';
+  activeDatasetId = localStorage.getItem('activeDatasetId');
+  myDatasetRole   = localStorage.getItem('activeDatasetRole');  // 'admin' | 'editor' | 'viewer'
+  const dsName    = localStorage.getItem('activeDatasetName');
+
+  document.getElementById('currentUserDisp').textContent = me;
+  document.getElementById('sessionUser').textContent     = me;
+
+  // Show session role based on DATASET role (not system role)
+  const roleLabel = myDatasetRole
+    ? { admin: '⚡ Dataset Admin', editor: '✏️ Dataset Editor', viewer: '👁 Dataset Viewer' }[myDatasetRole] || myDatasetRole
+    : '— No Active Dataset';
+  const roleColor = myDatasetRole === 'admin' ? 'var(--accent2)'
+                  : myDatasetRole === 'editor' ? 'var(--warn)'
+                  : '#0099cc';
+  document.getElementById('sessionRole').innerHTML =
+    `<span style="color:${roleColor};font-size:0.88rem">${roleLabel}</span>`;
+
+  // Update topbar subtitle
+  const disp = document.getElementById('currentUserDisp');
+  if (disp && dsName) {
+    const p = disp.closest('.topbar-left')?.querySelector('p');
+    if (p) p.innerHTML = `Manage dataset access &middot; <span style="color:var(--accent3)">${dsName}</span> &middot; Session: <strong id="currentUserDisp" style="color:var(--accent2)">${me}</strong>`;
+  }
+
+  if (!activeDatasetId) {
+    // No active dataset
+    document.getElementById('noDatasetBanner').style.display = 'block';
+    document.getElementById('membersPanel').style.display    = 'none';
+    document.getElementById('refreshBtn').style.display      = 'none';
+    return;
+  }
+
+  // Show members panel
+  document.getElementById('membersPanel').style.display = 'block';
+  document.getElementById('membersPanelTitle').textContent =
+    `Dataset Members — ${dsName || 'Active Dataset'}`;
+
+  if (myDatasetRole === 'admin') {
+    // Admin: show stats + editable table + refresh
+    document.getElementById('statsRow').style.display   = 'flex';
+    document.getElementById('refreshBtn').style.display = 'inline-flex';
+  } else {
+    // Non-admin: show viewer notice above the readonly table
+    document.getElementById('viewerNotice').style.display = 'block';
+    document.getElementById('refreshBtn').style.display   = 'none';
+  }
+
+  loadMembers();
+});
+
+// ── Fetch dataset members ──────────────────────────────────
+async function loadMembers() {
+  if (!activeDatasetId) return;
+  const token = localStorage.getItem('token');
+  document.getElementById('tableWrap').innerHTML =
+    '<div style="font-size:0.72rem;color:var(--text3);padding:1.2rem 0;text-align:center"><i class="fas fa-circle-notch fa-spin"></i> &nbsp;Loading…</div>';
+  try {
+    const res  = await fetch(`${API}/datasets/${activeDatasetId}/members`, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const data = await res.json();
+    if (!data.success) { showToast(data.message || 'Failed to load members.', 'err'); return; }
+
+    // Sync role in case it changed server-side
+    if (data.myRole) {
+      myDatasetRole = data.myRole;
+      localStorage.setItem('activeDatasetRole', data.myRole);
+    }
+
+    renderStats(data.members);
+    renderTable(data.members);
+  } catch {
+    showToast('Cannot connect to server.', 'err');
+    document.getElementById('tableWrap').innerHTML =
+      '<div style="font-size:0.72rem;color:var(--danger);padding:1.2rem 0;text-align:center"><i class="fas fa-circle-exclamation"></i> &nbsp;Server unreachable — is the backend running?</div>';
+  }
+}
+
+// ── Stats ──────────────────────────────────────────────────
+function renderStats(members) {
+  if (myDatasetRole !== 'admin') return;
+  document.getElementById('statTotal').textContent  = members.length;
+  document.getElementById('statAdmin').textContent  = members.filter(m => m.role === 'admin').length;
+  document.getElementById('statEditor').textContent = members.filter(m => m.role === 'editor').length;
+  document.getElementById('statViewer').textContent = members.filter(m => m.role === 'viewer').length;
+}
+
+// ── Members table ──────────────────────────────────────────
+function renderTable(members) {
+  const me       = (localStorage.getItem('username') || '').toLowerCase();
+  const isAdmin  = myDatasetRole === 'admin';
+
+  if (!members.length) {
+    document.getElementById('tableWrap').innerHTML =
+      '<div style="font-size:0.72rem;color:var(--text3);padding:1rem 0;text-align:center">No members found.</div>';
+    return;
+  }
+
+  const rows = members.map(m => {
+    const isMe = m.username.toLowerCase() === me;
+    const roleBadge = `<span class="role-badge role-${m.role}">${m.role.toUpperCase()}</span>`;
+    const youTag    = isMe ? '<span class="role-you">YOU</span>' : '';
+
+    let actionsHtml = '';
+    if (isAdmin && !isMe) {
+      // Role dropdown
+      const opts = ['admin','editor','viewer'].map(r =>
+        `<option value="${r}" ${m.role === r ? 'selected' : ''}>${r.charAt(0).toUpperCase()+r.slice(1)}</option>`
+      ).join('');
+
+      actionsHtml = `
+        <select class="role-select" id="sel-${m.id}" title="Change role">${opts}</select>
+        <button class="action-btn btn-save"
+          onclick="changeRole(${m.id}, '${m.username}')">
+          <i class="fas fa-floppy-disk"></i> Save
+        </button>
+        <button class="action-btn btn-remove"
+          onclick="askRemove(${m.id}, '${m.username}')">
+          <i class="fas fa-user-minus"></i> Remove
+        </button>`;
+    } else if (isAdmin && isMe) {
+      actionsHtml = `<span style="font-size:0.62rem;color:var(--text3);letter-spacing:1px">OWNER</span>`;
+    }
+
+    return `<tr>
+      <td style="color:var(--accent2);font-weight:bold">${m.username}${youTag}</td>
+      <td>${roleBadge}</td>
+      <td style="white-space:nowrap">${actionsHtml}</td>
+    </tr>`;
+  }).join('');
+
+  const thead = isAdmin
+    ? `<tr><th>Username</th><th>Role</th><th>Actions</th></tr>`
+    : `<tr><th>Username</th><th>Role</th></tr>`;
+
+  document.getElementById('tableWrap').innerHTML = `
+    <table class="members-table">
+      <thead>${thead}</thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+// ── Change role ────────────────────────────────────────────
+async function changeRole(userId, username) {
+  const sel   = document.getElementById('sel-' + userId);
+  const role  = sel ? sel.value : null;
+  if (!role) return;
+  const token = localStorage.getItem('token');
+  try {
+    const res  = await fetch(`${API}/datasets/${activeDatasetId}/members/role`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body:    JSON.stringify({ userId, role })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(`✓ ${username} is now ${role}`, 'ok');
+      loadMembers();
+    } else {
+      showToast(data.message || 'Update failed.', 'err');
+    }
+  } catch {
+    showToast('Cannot connect to server.', 'err');
+  }
+}
+
+// ── Remove member ──────────────────────────────────────────
+function askRemove(userId, username) {
+  pendingRemove = { userId, username };
+  document.getElementById('confirmUsername').textContent = username;
+  document.getElementById('confirmOverlay').style.display = 'flex';
+}
+
+function closeConfirm() {
+  pendingRemove = null;
+  document.getElementById('confirmOverlay').style.display = 'none';
+}
+
+async function confirmRemove() {
+  if (!pendingRemove) return;
+  const { userId, username } = pendingRemove;
+  closeConfirm();
+  const token = localStorage.getItem('token');
+  try {
+    const res  = await fetch(`${API}/datasets/${activeDatasetId}/members/${userId}`, {
+      method:  'DELETE',
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(`✓ ${username} removed from dataset`, 'ok');
+      loadMembers();
+    } else {
+      showToast(data.message || 'Remove failed.', 'err');
+    }
+  } catch {
+    showToast('Cannot connect to server.', 'err');
+  }
+}
+
+// ── Toast ──────────────────────────────────────────────────
+function showToast(msg, type = 'ok') {
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.innerHTML = `<i class="fas fa-${type === 'ok' ? 'circle-check' : 'circle-exclamation'}"></i> &nbsp;${msg}`;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3200);
+}
+
+function doLogout() { localStorage.clear(); window.location.replace(getPublicLogin()); }
+</script>
+</body></html>

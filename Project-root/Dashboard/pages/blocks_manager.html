@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>WattWise – Blocks Manager</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/shared.css"/>
+  <style>
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+    .dataset-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .dataset-card:hover { border-color: var(--accent3); box-shadow: 0 4px 12px rgba(0,255,65,0.05); }
+    .dataset-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+    .dataset-title { font-family: var(--font-head); color: var(--accent); font-size: 1.2rem; display:flex; align-items:center; gap:8px;}
+    .dataset-desc { font-size: 0.75rem; color: var(--text3); margin-bottom: 1rem; }
+    .dataset-role { font-size: 0.6rem; padding: 3px 8px; background: rgba(0,255,65,0.05); border: 1px solid var(--accent3); color: var(--accent2); border-radius: 3px; text-transform: uppercase; letter-spacing: 1px; }
+
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
+    .modal.show { display: flex; }
+    .modal-content { background: var(--bg); border: 1px solid var(--border); padding: 2rem; width: 400px; max-width: 90%; border-radius: 6px; box-shadow: 0 0 30px rgba(0,255,65,0.1); }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; color: var(--text3); font-size: 0.7rem; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
+    .form-group input { width: 100%; padding: 10px; background: var(--bg3); border: 1px solid var(--border); color: var(--text); font-family: var(--font-main); }
+    .form-group input:focus { outline: none; border-color: var(--accent); }
+    
+    .passkey-box { background: #011101; padding: 15px; border: 1px dashed var(--accent); color: var(--accent); font-family: monospace; font-size: 0.9rem; word-break: break-all; margin-top: 10px; text-align: center; }
+  </style>
+</head>
+<body>
+
+  <div class="cursor" id="cursor"></div>    
+<div class="cursor-dot" id="cursorDot"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo"><h1>WATT<br>WISE</h1><p>Energy Monitor</p></div>
+  <div class="sidebar-user">
+    <div class="avatar" id="avatarEl">—</div>
+    <div class="sidebar-user-info">
+      <span id="sidebarUser">—</span>
+      <small id="sidebarRole">—</small>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a class="nav-item" data-page="dashboard"><i class="fas fa-gauge-high"></i> Dashboard</a>
+    <a class="nav-item" data-page="live"><i class="fas fa-bolt"></i> Live Usage</a>
+    <a class="nav-item" data-page="consumption"><i class="fas fa-chart-line"></i> Consumption Trend</a>
+
+    <div class="nav-section-label">Analysis</div>
+    <a class="nav-item" data-page="forecast"><i class="fas fa-brain"></i> ML Forecast</a>
+    <a class="nav-item" data-page="lstm_dashboard"><i class="fas fa-wave-square"></i> LSTM Dashboard</a>
+    <a class="nav-item" data-page="ai_assistant"><i class="fas fa-robot"></i> AI Assistant</a>
+    <a class="nav-item" data-page="anomalies"><i class="fas fa-triangle-exclamation"></i> Anomalies</a>
+
+    <div class="nav-section-label">Blocks</div>
+    <!-- Blocks Manager link acts dynamically initialized -->
+    <a class="nav-item" data-page="block_gh"><i class="fas fa-venus"></i> Block GH</a>
+    <a class="nav-item" data-page="block_bh"><i class="fas fa-mars"></i> Block BH</a>
+    <a class="nav-item" data-page="block_ab1"><i class="fas fa-building-columns"></i> Block AB1</a>
+    <a class="nav-item" data-page="block_ab2"><i class="fas fa-building"></i> Block AB2</a>
+    <a class="nav-item" data-page="block_adm"><i class="fas fa-landmark"></i> Block ADMIN</a>
+
+    <div class="nav-section-label">Account</div>
+    <a class="nav-item" data-page="switch_user"><i class="fas fa-users-gear"></i> User Management</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <a class="nav-item danger" id="logoutBtn"><i class="fas fa-right-from-bracket"></i> Sign Out</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h2>BLOCKS MANAGER</h2>
+      <p>Monitor system blocks and create custom campus blocks</p>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-primary" onclick="openCreateModal()"><i class="fas fa-plus"></i> New Custom Block</button>
+      <button class="btn" onclick="openJoinModal()"><i class="fas fa-link"></i> Join with Passkey</button>
+    </div>
+  </div>
+
+  <p class="section-title">System Default Blocks</p>
+  <div class="grid" id="systemBlockList">
+    <!-- Rendered via JS -->
+  </div>
+  
+  <p class="section-title" style="margin-top:2rem;">Your Custom Blocks</p>
+  <div class="grid" id="blockList">
+    <p style="color:var(--text3)">Loading your custom blocks...</p>
+  </div>
+</main>
+
+<!-- Create Block Modal -->
+<div class="modal" id="createModal">
+  <div class="modal-content">
+    <h3 style="color:var(--accent);margin-bottom:1.5rem">Create Custom Block</h3>
+    <div class="form-group">
+      <label>Block Name</label>
+      <input type="text" id="createName" placeholder="e.g., New Physics Lab"/>
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <input type="text" id="createDesc" placeholder="Optional"/>
+    </div>
+    <div class="actions" style="justify-content: flex-end; margin-top:20px;">
+      <button class="btn" onclick="closeModals()">Cancel</button>
+      <button class="btn btn-primary" onclick="createBlock()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Join Block Modal -->
+<div class="modal" id="joinModal">
+  <div class="modal-content">
+    <h3 style="color:var(--accent);margin-bottom:1.5rem">Join a Block</h3>
+    <p style="font-size:0.75rem;color:var(--text3);margin-bottom:1rem">Enter the 10-character passkey provided by the block Admin. It expires in 24 hours.</p>
+    <div class="form-group">
+      <label>Passkey (10-character code)</label>
+      <input type="text" id="joinPasskey" placeholder="e.g. A3F9B2C0D1" maxlength="10" style="letter-spacing:2px;text-transform:uppercase"/>
+    </div>
+    <div class="actions" style="justify-content: flex-end; margin-top:20px;">
+      <button class="btn" onclick="closeModals()">Cancel</button>
+      <button class="btn btn-primary" onclick="joinBlock()">Join</button>
+    </div>
+  </div>
+</div>
+
+<!-- Share Block Modal -->
+<div id="shareModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center;" onclick="event.stopPropagation()">
+  <div class="modal-content" style="position:relative" onclick="event.stopPropagation()">
+    <button id="shareCloseBtn" onclick="closeShareModal()" style="position:absolute; top:12px; right:12px; background:transparent; border:1px solid var(--border); color:var(--text3); width:28px; height:28px; border-radius:4px; cursor:pointer; font-size:0.9rem; display:flex; align-items:center; justify-content:center; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'">
+      <i class="fas fa-times"></i>
+    </button>
+    <h3 style="color:var(--accent);margin-bottom:1rem;padding-right:2rem">Share Block Access</h3>
+    <p style="font-size:0.75rem;color:var(--warn);margin-bottom:1rem">
+      <i class="fas fa-exclamation-triangle"></i> Share this <strong>10-character passkey</strong> with your collaborator.
+      It expires in <strong>24 hours</strong>.
+    </p>
+    <div class="passkey-box" id="sharePasskeyDisplay">Generating...</div>
+    <p style="font-size:0.7rem;color:var(--text3);margin-top:0.75rem"><i class="fas fa-lock"></i> Share this code with your collaborator.</p>
+    <div class="actions" style="justify-content: flex-end; margin-top: 1rem;">
+      <button class="btn btn-primary" id="shareCopyBtn" onclick="copyPasskey()"><i class="fas fa-copy"></i> Copy Passkey</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/shared.js"></script>
+<script>
+  const API_BASE = 'http://localhost:5000';
+  let customBlocks = [];
+
+  document.addEventListener("DOMContentLoaded", () => {
+    initSidebar('blocks_manager');
+    renderSystemBlocks();
+    loadBlocks();
+  });
+
+  function renderSystemBlocks() {
+    const list = document.getElementById('systemBlockList');
+    // Using WW default blocks mapping to their pages
+    const sysBlocks = [
+      { key: 'G-H', label: 'Block GH', icon: 'fa-venus', page: 'block_gh' },
+      { key: 'B-H', label: 'Block BH', icon: 'fa-mars', page: 'block_bh' },
+      { key: 'AB1', label: 'Block AB1', icon: 'fa-building-columns', page: 'block_ab1' },
+      { key: 'AB2', label: 'Block AB2', icon: 'fa-building', page: 'block_ab2' },
+      { key: 'ADMIN', label: 'Block ADMIN', icon: 'fa-landmark', page: 'block_adm' }
+    ];
+
+    list.innerHTML = sysBlocks.map(b => `
+      <div class="dataset-card">
+        <div class="dataset-header">
+          <span class="dataset-title"><i class="fas ${b.icon}"></i> ${b.label}</span>
+          <span class="dataset-role" style="background:transparent;border:0;color:var(--text3)">System Fixed</span>
+        </div>
+        <div class="dataset-desc">Standard campus building included in base telemetry.</div>
+        <div class="actions">
+          <button class="btn btn-primary" onclick="navigate('${b.page}')">View Dashboard</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function loadBlocks() {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${API_BASE}/blocks`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const data = await res.json();
+      if (data.success) { 
+        customBlocks = data.blocks; 
+        renderCustomBlocks(); 
+      }
+    } catch(e) { 
+      document.getElementById('blockList').innerHTML = `<p style="color:var(--danger)">Failed to load custom blocks.</p>`; 
+    }
+  }
+
+  function renderCustomBlocks() {
+    const list = document.getElementById('blockList');
+    if (customBlocks.length === 0) { 
+      list.innerHTML = `<p style="color:var(--text3)">No custom blocks found. Create one above!</p>`; 
+      return; 
+    }
+    list.innerHTML = customBlocks.map(b => {
+      const roleStr = b.role === 'admin' ? '<i class="fas fa-crown"></i> Admin' : b.role;
+      return `<div class="dataset-card">
+          <div class="dataset-header"><span class="dataset-title"><i class="fas fa-layer-group"></i> ${b.name}</span><span class="dataset-role">${roleStr}</span></div>
+          <div class="dataset-desc">${b.description || 'No description provided.'}</div>
+          <div class="actions">
+            <button class="btn btn-primary" onclick="window.location.href='block_custom.html?id=${b.id}'">View Dashboard</button>
+            ${b.role === 'admin' ? `
+              <button class="btn" onclick="openShareModal(${b.id})"><i class="fas fa-share-nodes"></i> Share</button>
+            ` : ''}
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  /* --- MODAL LOGIC --- */
+  function openCreateModal() { document.getElementById('createModal').classList.add('show'); }
+  function openJoinModal() { document.getElementById('joinModal').classList.add('show'); }
+  function closeModals() { document.querySelectorAll('.modal:not(#shareModal)').forEach(m => m.classList.remove('show')); }
+  
+  function closeShareModal() {
+    document.getElementById('shareModal').style.display = 'none';
+    document.getElementById('sharePasskeyDisplay').textContent = 'Generating...';
+    const copyBtn = document.getElementById('shareCopyBtn');
+    copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy Passkey';
+    copyBtn.style.background = '';
+    copyBtn.style.color = '';
+    copyBtn.disabled = false;
+  }
+
+  async function copyPasskey() {
+    const disp = document.getElementById('sharePasskeyDisplay');
+    const text = disp.textContent || disp.innerText;
+    if (!text || text.trim() === 'Generating...') return;
+    const copyBtn = document.getElementById('shareCopyBtn');
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text.trim());
+      } else {
+        throw new Error('Clipboard API unavailable');
+      }
+      copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+      copyBtn.style.background = 'var(--accent)';
+      copyBtn.style.color = 'var(--bg)';
+      copyBtn.disabled = true;
+    } catch(e) {
+      const textArea = document.createElement("textarea");
+      textArea.value = text.trim();
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        copyBtn.style.background = 'var(--accent)';
+        copyBtn.style.color = 'var(--bg)';
+        copyBtn.disabled = true;
+      } catch (err) {
+        alert('Please manually copy: ' + text.trim());
+      }
+      document.body.removeChild(textArea);
+    }
+  }
+
+  async function createBlock() {
+    const name = document.getElementById('createName').value;
+    const desc = document.getElementById('createDesc').value;
+    if (!name) return alert('Name is required');
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${API_BASE}/blocks`, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
+        body: JSON.stringify({ name, description: desc }) 
+      });
+      const data = await res.json();
+      if (data.success) { closeModals(); loadBlocks(); document.getElementById('createName').value = ''; }
+      else { alert('Failed: ' + data.message); }
+    } catch(e) {}
+  }
+
+  async function joinBlock() {
+    const passkey = document.getElementById('joinPasskey').value.trim().toUpperCase();
+    if (!passkey || passkey.length !== 10) return alert('Please enter the 10-character passkey.');
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${API_BASE}/blocks/join`, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
+        body: JSON.stringify({ otp_code: passkey }) 
+      });
+      const data = await res.json();
+      if (data.success) { closeModals(); loadBlocks(); document.getElementById('joinPasskey').value = ''; } 
+      else { alert('Join failed: ' + data.message); }
+    } catch(e) {}
+  }
+
+  async function openShareModal(blockId) {
+    const copyBtn = document.getElementById('shareCopyBtn');
+    if (copyBtn) {
+      copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy Passkey';
+      copyBtn.style.background = '';
+      copyBtn.style.color = '';
+      copyBtn.disabled = false;
+    }
+
+    const m = document.getElementById('shareModal');
+    m.style.display = 'flex';
+    const disp = document.getElementById('sharePasskeyDisplay');
+    disp.textContent = 'Generating...';
+
+    try {
+      const res = await fetch(`${API_BASE}/blocks/${blockId}/invite`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        disp.textContent = data.otp_code;
+      } else {
+        disp.innerHTML = `<span style="color:var(--danger)">&#x2717; Failed: ${data.message}</span>`;
+      }
+    } catch(e) {
+      disp.innerHTML = '<span style="color:var(--danger)">&#x2717; Network error.</span>';
+    }
+  }
+</script>
+</body>
+</html>

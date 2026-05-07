@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign In – WattWise</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<!-- auth-page class centres the login card via CSS grid -->
+<body class="auth-page">
+  <script>
+    (function(){
+      const theme = localStorage.getItem('ww_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+
+  <div id="cursor" class="cursor"></div>
+  <div id="cursorDot" class="cursor-dot"></div>
+
+  <div class="login-card">
+    <div class="header">
+      <h1>Welcome back</h1>
+      <p>Sign in to continue to your account</p>
+    </div>
+
+    <form class="form-body" id="loginForm" novalidate>
+      <div class="input-group">
+        <label for="username">Username</label>
+        <input
+          type="text"
+          id="username"
+          placeholder="your username"
+          required
+          autocomplete="username"
+          spellcheck="false"
+          autocapitalize="none"
+        />
+      </div>
+
+      <div class="input-group">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          placeholder="••••••••"
+          required
+          autocomplete="current-password"
+        />
+        <i class="fa-solid fa-eye password-toggle" id="togglePassword" role="button" aria-label="Toggle password visibility"></i>
+      </div>
+
+      <div class="options">
+        <label class="remember">
+          <input type="checkbox" id="remember" /> Remember me
+        </label>
+        <a href="#" class="forgot">Forgot password?</a>
+      </div>
+
+      <div
+        id="error-message"
+        role="alert"
+        aria-live="polite"
+        style="display:none; font-size:0.95rem; text-align:center; margin:4px 0;"
+      ></div>
+
+      <button type="submit" id="submitBtn">Sign in</button>
+    </form>
+
+    <div class="footer">
+      Don't have an account? <a href="register.html">Sign up</a>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+</body>
+</html>

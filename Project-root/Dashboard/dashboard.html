@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>WattWise – Energy Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+  <link rel="stylesheet" href="css/shared.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .upload-card{border-style:dashed;border-color:var(--accent3);cursor:pointer;text-align:center;}
+    .upload-card:hover{border-color:var(--accent);background:rgba(0,255,65,0.03);}
+    .upload-icon{font-size:1.6rem;color:var(--accent3);margin-bottom:6px;}
+    .upload-card:hover .upload-icon{color:var(--accent);}
+    .upload-card p{font-size:0.7rem;color:var(--text3);line-height:1.5;}
+    .upload-card strong{color:var(--accent2);display:block;font-size:0.76rem;margin-bottom:3px;}
+    .forecast-card{border-color:var(--border2);}
+    .refresh-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px;}
+    .refresh-item{background:var(--bg3);border:1px solid var(--border);padding:7px 9px;font-size:0.66rem;display:flex;justify-content:space-between;align-items:center;}
+    .refresh-item span{color:var(--text3);}
+    .refresh-item strong{color:var(--accent2);}
+    .anomaly-card{border-color:var(--danger);}
+    .anomaly-card::before{background:linear-gradient(90deg,transparent,rgba(255,51,85,0.5),transparent);}
+    .appliance-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin-top:10px;}
+    .app-item{background:var(--bg3);border:1px solid var(--border);padding:9px 6px;text-align:center;font-size:0.63rem;transition:all 0.2s;opacity:0.4;}
+    .app-item.live{opacity:1;border-color:var(--accent3);}
+    .app-item i{display:block;font-size:1rem;color:var(--accent3);margin-bottom:4px;}
+    .app-item.live i{color:var(--accent);}
+    .app-item strong{display:block;color:var(--accent2);font-size:0.78rem;margin:2px 0 1px;}
+    .app-item span{color:var(--text3);}
+    .billing-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:0.7rem;}
+    .billing-row span{color:var(--text3);}
+    .billing-row strong{color:var(--accent2);}
+    .billing-total{border-top:1px solid var(--border2);margin-top:4px;padding-top:8px;}
+    .billing-total strong{color:var(--accent);font-family:var(--font-head);font-size:0.95rem;}
+    #mainChart { display:block; }
+    @media(max-width:900px){.appliance-grid{grid-template-columns:repeat(3,1fr);}}
+    .sidebar-header { flex-shrink: 0; }
+    .sidebar-nav-wrapper {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: thin;
+      scrollbar-color: var(--accent3) transparent;
+    }
+    .sidebar-nav-wrapper::-webkit-scrollbar { width: 6px; }
+    .sidebar-nav-wrapper::-webkit-scrollbar-track { background: transparent; }
+    .sidebar-nav-wrapper::-webkit-scrollbar-thumb { background: var(--accent3); border-radius: 10px; }
+    .sidebar-nav-wrapper::-webkit-scrollbar-thumb:hover { background: var(--accent2); }
+  </style>
+</head>
+<body>
+
+  <div class="cursor" id="cursor"></div>    
+<div class="cursor-dot" id="cursorDot"></div>
+
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <h1>WATT<br>WISE</h1>
+      <p>Energy Monitor</p>
+    </div>
+    <div class="sidebar-user">
+      <div class="avatar" id="avatarEl">—</div>
+      <div class="sidebar-user-info">
+        <span id="sidebarUser">—</span>
+        <small id="sidebarRole">—</small>
+      </div>
+    </div>
+  </div>
+  <div class="sidebar-nav-wrapper">
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+      <a class="nav-item" data-page="dashboard"><i class="fas fa-gauge-high"></i> Dashboard</a>
+      <a class="nav-item" data-page="live"><i class="fas fa-bolt"></i> Live Usage</a>
+      <a class="nav-item" data-page="consumption"><i class="fas fa-chart-line"></i> Consumption Trend</a>
+      <div class="nav-section-label">Analysis</div>
+      <a class="nav-item" data-page="forecast"><i class="fas fa-brain"></i> ML Forecast</a>
+      <a class="nav-item" data-page="lstm_dashboard"><i class="fas fa-wave-square"></i> LSTM Dashboard</a>
+      <a class="nav-item" data-page="ai_assistant"><i class="fas fa-robot"></i> AI Assistant</a>
+      <a class="nav-item" data-page="anomalies"><i class="fas fa-triangle-exclamation"></i> Anomalies</a>
+      <div class="nav-section-label">Blocks</div>
+      <a class="nav-item" data-page="block_gh"><i class="fas fa-venus"></i> Block GH</a>
+      <a class="nav-item" data-page="block_bh"><i class="fas fa-mars"></i> Block BH</a>
+      <a class="nav-item" data-page="block_ab1"><i class="fas fa-building-columns"></i> Block AB1</a>
+      <a class="nav-item" data-page="block_ab2"><i class="fas fa-building"></i> Block AB2</a>
+      <a class="nav-item" data-page="block_adm"><i class="fas fa-landmark"></i> Admin Block</a>
+      <div class="nav-section-label">Account</div>
+      <a class="nav-item" data-page="switch_user"><i class="fas fa-users-gear"></i> User Management</a>
+    </nav>
+  </div>
+  <div class="sidebar-bottom">
+    <a class="nav-item danger" id="logoutBtn"><i class="fas fa-right-from-bracket"></i> Sign Out</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h2>ENERGY DASHBOARD</h2>
+      <p>Jan 06–12, 2025 &middot; All Blocks &middot; <span id="dateStr">—</span></p>
+    </div>
+    <div class="topbar-right">
+      <span><span class="status-dot"></span>System Online</span>
+      <span>User: <strong id="topUser" style="color:var(--accent2)">—</strong></span>
+    </div>
+  </div>
+
+  <div class="block-selector">
+    <button class="block-btn" data-nav="block_gh"><i class="fas fa-venus"></i>Block GH</button>
+    <button class="block-btn" data-nav="block_bh"><i class="fas fa-mars"></i>Block BH</button>
+    <button class="block-btn" data-nav="block_ab1"><i class="fas fa-building-columns"></i>Block AB1</button>
+    <button class="block-btn" data-nav="block_ab2"><i class="fas fa-building"></i>Block AB2</button>
+    <button class="block-btn" data-nav="block_adm"><i class="fas fa-landmark"></i>Admin Block</button>
+    <button class="block-btn" data-nav="blocks_manager" style="border-color:var(--accent2);color:var(--accent2)"><i class="fas fa-cubes"></i>Block Manager</button>
+  </div>
+
+  <p class="section-title">Energy Overview — Week of Jan 06–12</p>
+  <div class="grid-4">
+    <div class="card upload-card" onclick="navigate('dataset_manager')">
+      <div class="upload-icon"><i class="fas fa-database"></i></div>
+      <strong>Dataset Manager</strong>
+      <p>Upload & Manage Logs</p>
+    </div>
+    <div class="card">
+      <div class="card-label"><i class="fas fa-bolt"></i> Total Usage (kWh)</div>
+      <div class="card-value" id="totalCampusVal">0</div>
+      <div class="card-sub">Week total (all blocks)</div>
+      <div class="card-change" id="totalChangeLabel">—</div>
+    </div>
+    <div class="card">
+      <div class="card-label"><i class="fas fa-building"></i> Highest Block</div>
+      <div class="card-value" id="highestBlockVal" style="font-size:1rem;margin-top:4px">N/A</div>
+      <div id="highestBlockSub" class="card-sub">0.0 kWh this week</div>
+      <div class="card-change" id="highestChangeLabel">—</div>
+    </div>
+    <div class="card">
+      <div class="card-label"><i class="fas fa-fire"></i> Peak Day</div>
+      <div class="card-value" id="peakDayVal" style="font-size:1rem;margin-top:4px">N/A</div>
+      <div class="card-sub">Overall peak pattern</div>
+      <div class="card-change" id="peakStatusLabel">—</div>
+    </div>
+  </div>
+
+  <p class="section-title">Forecast &amp; Alerts</p>
+  <div class="grid-2">
+    <div class="card forecast-card">
+      <div class="card-label"><i class="fas fa-chart-line"></i> Block-wise Forecast — Next 24h</div>
+      <div class="bar-row"><span class="bar-lbl">Block GH</span><div class="bar-track"><div class="bar-fill" style="width:23%"></div></div><span class="bar-val">91.2 kWh</span></div>
+      <div class="bar-row"><span class="bar-lbl">Block BH</span><div class="bar-track"><div class="bar-fill" style="width:19%"></div></div><span class="bar-val">76.4 kWh</span></div>
+      <div class="bar-row"><span class="bar-lbl">Block AB1</span><div class="bar-track"><div class="bar-fill" style="width:45%"></div></div><span class="bar-val">177.3 kWh</span></div>
+      <div class="bar-row"><span class="bar-lbl">Block AB2</span><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><span class="bar-val">396.0 kWh</span></div>
+      <div class="bar-row"><span class="bar-lbl">Admin Block</span><div class="bar-track"><div class="bar-fill" style="width:81%"></div></div><span class="bar-val">322.5 kWh</span></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:0.8rem;">
+      <div class="card">
+        <div class="card-label"><i class="fas fa-rotate"></i> Refresh Forecast</div>
+        <div class="refresh-grid">
+          <div class="refresh-item"><span>Model</span><strong>LSTM+XGB</strong></div>
+          <div class="refresh-item"><span>Accuracy</span><strong>94.2%</strong></div>
+          <div class="refresh-item"><span>Last Run</span><strong id="lastRun">—</strong></div>
+          <div class="refresh-item"><span>Status</span><strong style="color:var(--accent)">Ready</strong></div>
+        </div>
+        <button class="btn btn-full" id="forecastBtn" onclick="runForecast()">
+          <i class="fas fa-rotate"></i> Run Forecast Now
+        </button>
+      </div>
+      <div class="card anomaly-card">
+        <div class="card-label" style="color:var(--danger)"><i class="fas fa-triangle-exclamation"></i> Anomaly Detection</div>
+        <div class="anomaly-item"><i class="fas fa-circle-exclamation"></i><span>AB2 BigLab — PCs 225 kWh/day</span><small>High</small></div>
+        <div class="anomaly-item"><i class="fas fa-circle-exclamation"></i><span>ADMIN ACs — 828 kWh week total</span><small>Watch</small></div>
+      </div>
+    </div>
+  </div>
+
+  <p class="section-title">Live Monitoring</p>
+  <div class="card" style="margin-bottom:1rem">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div class="card-label" style="margin:0"><i class="fas fa-plug-circle-bolt"></i> Live Appliance Prediction</div>
+      <label class="toggle-wrap">
+        <span id="liveLabel">OFF</span>
+        <label class="toggle"><input type="checkbox" id="liveToggle" onchange="toggleLive(this)"/><span class="toggle-slider"></span></label>
+        <span>Enable Live</span>
+      </label>
+    </div>
+    <div class="appliance-grid">
+      <div class="app-item"><i class="fas fa-snowflake"></i><strong id="acVal">2.0 kW</strong><span>AC / ACs</span></div>
+      <div class="app-item"><i class="fas fa-droplet"></i><strong id="geyserVal">2.0 kW</strong><span>Geyser</span></div>
+      <div class="app-item"><i class="fas fa-computer"></i><strong id="pcVal">12.5 kW</strong><span>PCs</span></div>
+      <div class="app-item"><i class="fas fa-lightbulb"></i><strong>0.04 kW</strong><span>Lights</span></div>
+      <div class="app-item"><i class="fas fa-fan"></i><strong>0.05 kW</strong><span>Fans</span></div>
+      <div class="app-item"><i class="fas fa-plug"></i><strong>0.15 kW</strong><span>Sockets</span></div>
+    </div>
+  </div>
+
+  <div class="grid-21">
+    <div class="card">
+      <div class="card-label"><i class="fas fa-chart-area"></i> 7-Day Energy Consumption (All Blocks)</div>
+      <div class="chart-wrap" style="height:260px;">
+        <canvas id="mainChart"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label"><i class="fas fa-file-invoice-dollar"></i> Billing Summary (@ &#8377;8.5/kWh)</div>
+      <div id="dashBillingRows"></div>
+      <div style="margin-top:8px" id="dashBudgetBadge"></div>
+      <button class="btn btn-full" style="margin-top:10px;font-size:0.65rem" onclick="navigate('billing')">
+        <i class="fas fa-sliders"></i> &nbsp;Set Block Budgets
+      </button>
+    </div>
+  </div>
+</main>
+
+<script src="js/shared.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    initSidebar('dashboard');
+
+    document.querySelectorAll('.block-btn[data-nav]').forEach(btn => {
+      btn.addEventListener('click', () => navigate(btn.dataset.nav));
+    });
+
+    const u = localStorage.getItem('username') || 'Admin';
+    document.getElementById('topUser').textContent  = u;
+    document.getElementById('dateStr').textContent  = new Date().toLocaleDateString('en-IN', {dateStyle:'medium'});
+    document.getElementById('lastRun').textContent  = new Date().toLocaleTimeString('en-IN', {timeStyle:'short'});
+
+    let mainChartInstance = null;
+
+    function renderDashboard() {
+      // Destroy previous chart instance if re-rendering
+      if (mainChartInstance) { mainChartInstance.destroy(); mainChartInstance = null; }
+
+      mainChartInstance = lineChart('mainChart', WW.dates, [
+        dataset('Block GH', WW.blocks['G-H'].daily,   'G-H'),
+        dataset('Block BH',  WW.blocks['B-H'].daily,   'B-H'),
+        dataset('Block AB1',   WW.blocks['AB1'].daily,   'AB1'),
+        dataset('Block AB2',   WW.blocks['AB2'].daily,   'AB2'),
+        dataset('Admin Block',        WW.blocks['ADMIN'].daily, 'ADMIN')
+      ]);
+
+      buildDashBilling();
+      refreshDashboardSummaries();
+    }
+
+    // Listen for data-ready event (fired by loadAndPopulateWW)
+    window.addEventListener('ww:ready', renderDashboard, { once: true });
+
+    // Kick off data load (will fire ww:ready when done)
+    loadAndPopulateWW();
+
+  } catch (err) {
+    console.error('[WattWise] Dashboard init error:', err);
+  }
+});
+
+function refreshDashboardSummaries() {
+  let totalGrand = 0;
+  let highest = { name: 'N/A', val: 0 };
+  const daySums = [0,0,0,0,0,0,0]; // Mon-Sun
+  const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+  Object.values(WW.blocks).forEach(b => {
+    totalGrand += b.total;
+    if (b.total > highest.val) {
+      highest = { name: b.label, val: b.total };
+    }
+    if (b.daily && b.daily.length === 7) {
+      b.daily.forEach((v, i) => daySums[i] += v);
+    }
+  });
+
+  const maxDayVal = Math.max(...daySums);
+  const peakDayIdx = daySums.indexOf(maxDayVal);
+  const peakDay = maxDayVal > 0 ? days[peakDayIdx] : 'N/A';
+
+  // Update DOM
+  document.getElementById('totalCampusVal').textContent = totalGrand.toLocaleString('en-IN', {maximumFractionDigits:1});
+  document.getElementById('highestBlockVal').textContent = highest.name;
+  document.getElementById('highestBlockSub').textContent = highest.val.toFixed(1) + ' kWh this week';
+  document.getElementById('peakDayVal').textContent = peakDay;
+
+  if (totalGrand === 0) {
+    document.getElementById('totalChangeLabel').textContent = 'No data logs yet';
+    document.getElementById('highestChangeLabel').textContent = '—';
+    document.getElementById('peakStatusLabel').textContent = '—';
+  } else {
+    document.getElementById('totalChangeLabel').textContent = 'Live data sync';
+    document.getElementById('highestChangeLabel').textContent = 'Top contributor';
+    document.getElementById('peakStatusLabel').textContent = 'Peak usage detected';
+  }
+}
+
+function buildDashBilling() {
+  const RATE   = 8.5;
+  const blocks = ['G-H','B-H','AB1','AB2','ADMIN'];
+  const saved  = getBudgets();
+  let grand    = 0;
+
+  const rows = blocks.map(b => {
+    const cost   = +(WW.blocks[b].total * RATE).toFixed(2);
+    grand       += cost;
+    const budget = saved[b];
+    const status = getBudgetStatus(cost, budget);
+    const indicator = status
+      ? ` <span style="font-size:0.6rem;color:${status.pct >= 100 ? 'var(--danger)' : status.pct >= 80 ? 'var(--warn)' : 'var(--accent2)'}">
+            ${status.pct.toFixed(0)}%
+          </span>`
+      : '';
+    return `<div class="billing-row">
+              <span>${WW.blocks[b].label}</span>
+              <strong>&#8377;${cost.toLocaleString('en-IN')}${indicator}</strong>
+            </div>`;
+  });
+
+  rows.push(`<div class="billing-row billing-total">
+               <span>Total Usage</span>
+               <strong>&#8377;${grand.toLocaleString('en-IN', {maximumFractionDigits:0})}</strong>
+             </div>`);
+
+  document.getElementById('dashBillingRows').innerHTML = rows.join('');
+
+  const totalStatus = getBudgetStatus(grand, saved['TOTAL']);
+  const badge       = document.getElementById('dashBudgetBadge');
+  if (badge) {
+    badge.innerHTML = totalStatus
+      ? `<span class="badge ${totalStatus.cls}">${totalStatus.label} &mdash; ${totalStatus.pct.toFixed(1)}%</span>`
+      : `<span style="font-size:0.65rem;color:var(--text3)">No budget set &mdash;
+           <a onclick="navigate('billing')" style="color:var(--accent3);cursor:pointer">Set now</a>
+         </span>`;
+  }
+}
+
+function runForecast() {
+  const btn = document.getElementById('forecastBtn');
+  if (!btn) return;
+  btn.textContent = 'Running...';
+  btn.disabled    = true;
+  setTimeout(() => {
+    document.getElementById('lastRun').textContent = new Date().toLocaleTimeString('en-IN', {timeStyle:'short'});
+    btn.innerHTML  = '<i class="fas fa-rotate"></i> Run Forecast Now';
+    btn.disabled   = false;
+  }, 2000);
+}
+
+function handleUpload(input) {
+  if (input.files[0]) {
+    const card = input.closest('.upload-card');
+    card.querySelector('strong').textContent = '✓ ' + input.files[0].name;
+    card.querySelector('p').textContent      = 'File ready';
+  }
+}
+
+let liveInt = null;
+function toggleLive(cb) {
+  document.getElementById('liveLabel').textContent = cb.checked ? 'ON' : 'OFF';
+  document.querySelectorAll('.app-item').forEach(i => i.classList.toggle('live', cb.checked));
+  if (cb.checked) {
+    liveInt = setInterval(() => {
+      document.getElementById('acVal').textContent     = (1.8 + Math.random() * 0.6).toFixed(1) + ' kW';
+      document.getElementById('geyserVal').textContent = (1.8 + Math.random() * 0.5).toFixed(1) + ' kW';
+      document.getElementById('pcVal').textContent     = (11  + Math.random() * 3.0).toFixed(1) + ' kW';
+    }, 2000);
+  } else {
+    clearInterval(liveInt);
+  }
+}
+</script>
+</body>
+</html>

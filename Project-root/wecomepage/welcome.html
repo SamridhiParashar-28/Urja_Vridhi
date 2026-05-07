@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WattWise — Smart Energy Monitoring</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="w_style.css" />
+</head>
+
+<body>
+
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-dot" id="cursorDot"></div>
+
+  <canvas id="matrix-canvas"></canvas>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-logo">WATTWISE</div>
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#team">Team</a></li>
+    </ul>
+    <div class="nav-cta">
+      <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Theme">
+        <i class="fas fa-sun"></i>
+      </button>
+      <a href="/public/register.html" class="btn-outline"><i class="fas fa-user-plus"></i> Register</a>
+      <a href="/public/index.html" class="btn-solid"><i class="fas fa-bolt"></i> Sign In</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <p class="hero-tag"><i class="fas fa-bolt"></i> &nbsp; Smart Energy Monitoring System</p>
+    <h1 class="hero-title">
+      WATTWISE
+      <span>Energy Intelligence</span>
+    </h1>
+    <p class="hero-desc">
+      A hybrid machine learning dashboard that predicts short-term energy consumption,
+      detects anomalies, and optimises electricity costs.
+    </p>
+    <div class="hero-btns">
+      <a href="/public/index.html" class="btn-solid    hero-btn-main"><i class="fas fa-gauge-high"></i> Open
+        Dashboard</a>
+      <a href="/public/register.html" class="btn-outline  hero-btn-sec"><i class="fas fa-user-plus"></i> Create
+        Account</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <span class="hero-stat-val">5</span>
+        <span class="hero-stat-label">Blocks Monitored</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-val">94.2%</span>
+        <span class="hero-stat-label">Model Accuracy</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-val">LSTM</span>
+        <span class="hero-stat-label">+ XGBoost Hybrid</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-val">Real</span>
+        <span class="hero-stat-label">Dataset</span>
+      </div>
+    </div>
+    <div class="scroll-hint">
+      SCROLL DOWN
+      <i class="fas fa-chevron-down"></i>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ABOUT -->
+  <section class="about" id="about">
+    <p class="section-tag">// about the project</p>
+    <h2 class="section-title">What is WattWise?</h2>
+    <div class="about-grid">
+      <div class="about-text">
+        <p>
+          WattWise is a web-based energy monitoring platform developed as part this project.
+        </p>
+        <p>
+          The system supports native CSV parsing, runs a hybrid LSTM + XGBoost forecasting model, 
+          and provides secure **End-to-End Encryption (E2EE)** for sensitive dataset management via 
+          AES-256-GCM. An intelligent **Gemini-powered AI Assistant** is integrated to provide 
+          context-aware energy analysis and actionable optimization tips.
+        </p>
+        <p>
+          Built on a modern **Node.js + Express** backend with a high-performance **SQLite** 
+          database, the project features a custom **Blocks Manager** for dynamic environment 
+          configuration and secure OTP-based sharing rules.
+        </p>
+      </div>
+      <div class="feature-list" id="features">
+        <div class="feature-column">
+          <div class="feature-item">
+            <i class="fas fa-upload feature-icon"></i>
+            <div class="feature-text">
+              <strong>CSV Data Upload</strong>
+              <span>Upload meter readings per block, room and appliance. Supports full dataset format.</span>
+            </div>
+          </div>
+          <div class="feature-item">
+            <i class="fas fa-bolt feature-icon"></i>
+            <div class="feature-text">
+              <strong>Live Usage Monitoring</strong>
+              <span>Zone-level real-time consumption view across all monitored blocks, refreshing automatically.</span>
+            </div>
+          </div>
+          <div class="feature-item">
+            <i class="fas fa-brain feature-icon"></i>
+            <div class="feature-text">
+              <strong>Short-Term Forecasting</strong>
+              <span>LSTM + XGBoost hybrid model predicts next-day kWh per block with 94.2% accuracy.</span>
+            </div>
+          </div>
+          <div class="feature-item">
+            <i class="fas fa-robot feature-icon"></i>
+            <div class="feature-text">
+              <strong>AI Energy Assistant</strong>
+              <span>Gemini-powered multi-turn chat for context-aware energy insights and saving tips.</span>
+            </div>
+          </div>
+          <div class="feature-item">
+            <i class="fas fa-lock feature-icon"></i>
+            <div class="feature-text">
+              <strong>E2EE Dataset Security</strong>
+              <span>Sensitive data is encrypted client-side using AES-256-GCM before storage.</span>
+            </div>
+          </div>
+        </div>
+        <div class="feature-column">
+          <div class="feature-item">
+            <i class="fas fa-cubes feature-icon"></i>
+            <div class="feature-text">
+              <strong>Dynamic Blocks Manager</strong>
+              <span>Create and share custom environments with secure OTP-based passkeys.</span>
+            </div>
+          </div>
+          <div class="feature-item">
+            <i class="fas fa-triangle-exclamation feature-icon"></i>
+            <div class="feature-text">
+              <strong>Anomaly Detection</strong>
+              <span>Automatically flags unusual spikes and baseline deviations with severity ratings.</span>
+            </div>
+          </div>
+          <div class="feature-item">
+            <i class="fas fa-file-invoice-dollar feature-icon"></i>
+            <div class="feature-text">
+              <strong>Billing &amp; Cost Simulation</strong>
+              <span>Detailed cost estimates at configurable tariff rates for all blocks.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- TECH STACK -->
+  <section class="tech">
+    <p class="section-tag">// tech stack</p>
+    <h2 class="section-title">Built With</h2>
+    <div class="tech-grid">
+      <span class="tech-tag">HTML5</span>
+      <span class="tech-tag">CSS3</span>
+      <span class="tech-tag">JavaScript (ES6+)</span>
+      <span class="tech-tag">Node.js</span>
+      <span class="tech-tag">Express.js (v5)</span>
+      <span class="tech-tag">node:sqlite</span>
+      <span class="tech-tag">Gemini AI API</span>
+      <span class="tech-tag">JWT &amp; bcryptjs</span>
+      <span class="tech-tag">AES-256-GCM</span>
+      <span class="tech-tag">Chart.js (v4)</span>
+      <span class="tech-tag">Python 3.10+</span>
+      <span class="tech-tag">LSTM + XGBoost</span>
+      <span class="tech-tag">TensorFlow</span>
+      <span class="tech-tag">scikit-learn</span>
+      <span class="tech-tag">pandas</span>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- TEAM -->
+  <section class="team" id="team">
+    <p class="section-tag">// the team</p>
+    <h2 class="section-title">Meet the Developers</h2>
+    <div class="team-grid">
+
+      <div class="team-card">
+        <div class="team-avatar">SP</div>
+        <div class="team-name">Samridhi Parashar</div>
+        <div class="team-role">Full Stack , ML and API</div>
+        <a href="https://github.com/SamridhiParashar-28" target="_blank" class="team-github">
+          <i class="fab fa-github"></i> SamridhiParashar-28
+        </a>
+      </div>
+
+      <div class="team-card">
+        <div class="team-avatar">AK</div>
+        <div class="team-name">Aaryamann Kapoor</div>
+        <div class="team-role">Backend and Forecasting</div>
+        <a href="https://github.com/Aaryamann-Kapoor" target="_blank" class="team-github">
+          <i class="fab fa-github"></i> Aaryamann-Kapoor
+        </a>
+      </div>
+
+      <div class="team-card">
+        <div class="team-avatar">KB</div>
+        <div class="team-name">Kunal Bhatia</div>
+        <div class="team-role">Datasets and css </div>
+        <a href="https://github.com/kunalaids24-ai" target="_blank" class="team-github">
+          <i class="fab fa-github"></i> kunalaids24-ai
+        </a>
+      </div>
+
+      <div class="team-card">
+        <div class="team-avatar">DS</div>
+        <div class="team-name">Dimpy Singh</div>
+        <div class="team-role">Full Stack Developer</div>
+        <a href="#" target="_blank" class="team-github">
+          <i class="fab fa-github"></i> dimpy-singh
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="cta-box">
+      <h2>READY TO MONITOR?</h2>
+      <p>
+        Sign in to access the full energy dashboard — live usage, forecasts,
+        anomaly alerts, billing summaries and more.
+      </p>
+      <div class="cta-btns">
+        <a href="/public/index.html" class="btn-solid   hero-btn-main"><i class="fas fa-right-to-bracket"></i> Sign
+          In</a>
+        <a href="/public/register.html" class="btn-outline hero-btn-sec"><i class="fas fa-user-plus"></i> Create
+          Account</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">WATT-WISE</div>
+    <div class="footer-text">FossHack Project &middot; Energy Monitoring System &middot; 2026</div>
+    <div class="footer-text">Built by Samridhi, Aaryaman, Kunal &amp; Dimpy</div>
+  </footer>
+
+  <script src="w_script.js"></script>
+</body>
+
+</html>

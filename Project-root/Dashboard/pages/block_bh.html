@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>WattWise  Block BH</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+  <link rel="stylesheet" href="../css/shared.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .app-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 7px;
+    }
+    .app-bar-lbl {
+      font-size: 0.63rem;
+      color: var(--text3);
+      width: 110px;
+      flex-shrink: 0;
+    }
+    .app-bar-track {
+      flex: 1;
+      height: 5px;
+      background: var(--bg3);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .app-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 3px;
+    }
+    .app-bar-val {
+      font-size: 0.63rem;
+      color: var(--accent2);
+      width: 60px;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>    
+<div class="cursor-dot" id="cursorDot"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo"><h1>WATT<br>WISE</h1><p>Energy Monitor</p></div>
+  <div class="sidebar-user">
+    <div class="avatar" id="avatarEl"></div>
+    <div class="sidebar-user-info">
+      <span id="sidebarUser"></span>
+      <small id="sidebarRole"></small>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a class="nav-item" data-page="dashboard"><i class="fas fa-gauge-high"></i> Dashboard</a>
+    <a class="nav-item" data-page="live"><i class="fas fa-bolt"></i> Live Usage</a>
+    <a class="nav-item" data-page="consumption"><i class="fas fa-chart-line"></i> Consumption Trend</a>
+
+    <div class="nav-section-label">Analysis</div>
+    <a class="nav-item" data-page="forecast"><i class="fas fa-brain"></i> ML Forecast</a>
+    <a class="nav-item" data-page="lstm_dashboard"><i class="fas fa-wave-square"></i> LSTM Dashboard</a>
+    <a class="nav-item" data-page="ai_assistant"><i class="fas fa-robot"></i> AI Assistant</a>
+    <a class="nav-item" data-page="anomalies"><i class="fas fa-triangle-exclamation"></i> Anomalies</a>
+
+    <div class="nav-section-label">Blocks</div>
+    <a class="nav-item" data-page="block_gh"><i class="fas fa-venus"></i> Block GH</a>
+    <a class="nav-item active" data-page="block_bh"><i class="fas fa-mars"></i> Block BH</a>
+    <a class="nav-item" data-page="block_ab1"><i class="fas fa-building-columns"></i> Block AB1</a>
+    <a class="nav-item" data-page="block_ab2"><i class="fas fa-building"></i> Block AB2</a>
+    <a class="nav-item" data-page="block_adm"><i class="fas fa-landmark"></i> Block ADMIN</a>
+
+    <div class="nav-section-label">Account</div>
+    <a class="nav-item" data-page="switch_user"><i class="fas fa-users-gear"></i> User Management</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <a class="nav-item danger" id="logoutBtn"><i class="fas fa-right-from-bracket"></i> Sign Out</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h2><i class="fas fa-mars" style="font-size:1rem;margin-right:8px"></i>Block BH</h2>
+      <p>Jan 0612, 2025 &middot; Block Detail View &middot;
+        <a id="backBtn" style="color:var(--accent3);cursor:pointer;text-decoration:underline">? Back to Overview</a>
+      </p>
+    </div>
+    <div class="topbar-right"><span><span class="status-dot"></span>Block Online</span></div>
+  </div>
+
+  <p class="section-title">Weekly Summary</p>
+  <div class="grid-4" id="statsGrid"></div>
+
+  <p class="section-title">Daily Consumption  Jan 06 to Jan 12</p>
+  <div class="card" style="margin-bottom:1rem">
+    <div class="chart-wrap" style="height:240px;">
+      <canvas id="dailyChart"></canvas>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-label"><i class="fas fa-plug"></i> Appliance Breakdown (Week Total kWh)</div>
+      <div id="appBars"></div>
+    </div>
+    <div class="card">
+      <div class="card-label"><i class="fas fa-chart-pie"></i> Appliance Share</div>
+      <div class="chart-wrap-sm" style="height:220px;">
+        <canvas id="pieChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <p class="section-title">Billing Estimate</p>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-label"><i class="fas fa-file-invoice-dollar"></i> Cost Breakdown @ ?8.5/kWh</div>
+      <div id="billingRows"></div>
+    </div>
+    <div class="card">
+      <div class="card-label"><i class="fas fa-triangle-exclamation"></i> Anomaly Notes</div>
+      <div id="anomalyNotes"></div>
+    </div>
+  </div>
+</main>
+
+<script src="../js/shared.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    initSidebar('block_bh');
+
+    const backBtn = document.getElementById('backBtn');
+    if (backBtn) backBtn.addEventListener('click', () => navigate('dashboard'));
+
+    let dailyChartInst = null;
+    let pieChartInst = null;
+
+    function renderBlock() {
+      if (dailyChartInst) { dailyChartInst.destroy(); dailyChartInst = null; }
+      if (pieChartInst)   { pieChartInst.destroy();   pieChartInst = null;   }
+
+      const B = WW.blocks['B-H'];
+
+      document.getElementById('statsGrid').innerHTML = `
+        <div class="card">
+          <div class="card-label"><i class="fas fa-bolt"></i> Week Total</div>
+          <div class="card-value">${B.total}</div>
+          <div class="card-sub">kWh consumed</div>
+        </div>
+        <div class="card">
+          <div class="card-label"><i class="fas fa-calendar-day"></i> Daily Avg</div>
+          <div class="card-value">${B.avg.toFixed(1)}</div>
+          <div class="card-sub">kWh / day</div>
+        </div>
+        <div class="card">
+          <div class="card-label"><i class="fas fa-fire"></i> Peak Day</div>
+          <div class="card-value">${B.peak}</div>
+          <div class="card-sub">kWh (single day max)</div>
+        </div>
+        <div class="card">
+          <div class="card-label"><i class="fas fa-file-invoice-dollar"></i> Est. Bill</div>
+          <div class="card-value" style="font-size:1.1rem">
+            ?${(B.total * B.rate).toLocaleString('en-IN', {maximumFractionDigits:0})}
+          </div>
+          <div class="card-sub">@ ?${B.rate}/kWh</div>
+        </div>`;
+
+      dailyChartInst = lineChart('dailyChart', WW.dates, [
+        dataset(B.label, B.daily, 'B-H')
+      ]);
+
+      if (B.appliances.length > 0) {
+        const maxVal = Math.max(...B.appliances.map(a => a[1]));
+        document.getElementById('appBars').innerHTML = B.appliances.map(([name, kwh]) => `
+          <div class="app-bar-row">
+            <span class="app-bar-lbl">${name}</span>
+            <div class="app-bar-track">
+              <div class="app-bar-fill" style="width:${Math.round((kwh / maxVal) * 100)}%"></div>
+            </div>
+            <span class="app-bar-val">${kwh} kWh</span>
+          </div>
+        `).join('');
+
+        pieChartInst = new Chart(document.getElementById('pieChart').getContext('2d'), {
+          type: 'doughnut',
+          data: {
+            labels: B.appliances.map(a => a[0]),
+            datasets: [{
+              data: B.appliances.map(a => a[1]),
+              backgroundColor: getApplianceColors(B.appliances.length),
+              borderColor: '#010d01',
+              borderWidth: 3
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { labels: { color: '#00cc33', font: { family: "'Share Tech Mono'", size: 10 }, boxWidth: 10 } },
+              tooltip: { backgroundColor: '#010d01', borderColor: '#00551a', borderWidth: 1, titleColor: '#00ff41', bodyColor: '#00cc33' }
+            }
+          }
+        });
+
+        document.getElementById('billingRows').innerHTML =
+          B.appliances.map(([name, kwh]) => `
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:0.7rem;">
+              <span style="color:var(--text3)">${name}</span>
+              <strong style="color:var(--accent2)">
+                ?${(kwh * B.rate).toLocaleString('en-IN', {maximumFractionDigits:0})}
+              </strong>
+            </div>
+          `).join('') +
+          `<div style="display:flex;justify-content:space-between;padding:10px 0 0;font-size:0.78rem;border-top:2px solid var(--border2);margin-top:6px;">
+            <span style="color:var(--text3)">Total</span>
+            <strong style="color:var(--accent);font-family:var(--font-head)">
+              ?${(B.total * B.rate).toLocaleString('en-IN', {maximumFractionDigits:0})}
+            </strong>
+          </div>`;
+
+        const topApp = B.appliances[0];
+        const pct = B.total > 0 ? Math.round((topApp[1] / B.total) * 100) : 0;
+        document.getElementById('anomalyNotes').innerHTML = `
+          <div class="anomaly-item">
+            <i class="fas fa-circle-exclamation"></i>
+            <span><strong>${topApp[0]}</strong> accounts for ${pct}% of total block usage</span>
+          </div>
+          ${pct > 50 ? `
+          <div class="anomaly-item">
+            <i class="fas fa-triangle-exclamation"></i>
+            <span>Single appliance dominates  review scheduling / policy</span>
+          </div>` : ''}
+        `;
+      }
+    }
+
+    window.addEventListener('ww:ready', renderBlock, { once: true });
+    loadAndPopulateWW();
+
+  } catch (err) {
+    console.error('[WattWise] Block BH init error', err);
+  }
+});
+</script>
+</body>
+</html>

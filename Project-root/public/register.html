@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Register – WattWise</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+        integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<!-- auth-page class centres the card via CSS grid -->
+<body class="auth-page">
+  <script>
+    (function(){
+      const theme = localStorage.getItem('ww_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+
+  <div id="cursor" class="cursor"></div>
+  <div id="cursorDot" class="cursor-dot"></div>
+
+  <div class="login-card">
+    <div class="header">
+      <h1>New Account</h1>
+      <p>Create your account</p>
+    </div>
+
+    <form class="form-body" id="registerForm" novalidate>
+
+      <div class="input-group">
+        <label for="username">Username</label>
+        <input
+          type="text"
+          id="username"
+          placeholder="choose a username"
+          required
+          autocomplete="off"
+          spellcheck="false"
+          autocapitalize="none"
+          minlength="3"
+          maxlength="50"
+        />
+      </div>
+
+      <div class="input-group">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          placeholder="••••••••"
+          required
+          autocomplete="off"
+          minlength="6"
+        />
+        <i class="fa-solid fa-eye password-toggle" id="togglePassword" role="button" aria-label="Toggle password visibility"></i>
+      </div>
+
+      <div class="input-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <input
+          type="password"
+          id="confirmPassword"
+          placeholder="••••••••"
+          required
+          autocomplete="new-password"
+        />
+      </div>
+
+      <div
+        id="message"
+        role="alert"
+        aria-live="polite"
+        style="display:none; text-align:center; margin:8px 0; font-weight:bold; font-size:1rem;"
+      ></div>
+
+      <button type="submit" id="submitBtn">Register</button>
+    </form>
+
+    <div class="footer">
+      Already have an account? <a href="index.html">Sign in</a>
+    </div>
+  </div>
+
+  <script src="js/register.js"></script>
+</body>
+</html>

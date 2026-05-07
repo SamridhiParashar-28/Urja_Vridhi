@@ -1,0 +1,141 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>WattWise  Upload Data</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+<link rel="stylesheet" href="../css/shared.css"/>
+<style>
+.drop-zone{border:2px dashed var(--accent3);padding:3rem;text-align:center;cursor:pointer;transition:all 0.2s;}
+.drop-zone:hover,.drop-zone.over{border-color:var(--accent);background:rgba(0,255,65,0.03);}
+.drop-icon{font-size:2.5rem;color:var(--accent3);margin-bottom:10px;}
+.drop-zone:hover .drop-icon{color:var(--accent);}
+</style>
+</head><body>
+  
+  <div class="cursor" id="cursor"></div>    
+<div class="cursor-dot" id="cursorDot"></div>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h1>WATT<br>WISE</h1>
+    <p>Energy Monitor</p>
+  </div>
+  <div class="sidebar-user">
+    <div class="avatar" id="avatarEl"></div>
+    <div class="sidebar-user-info">
+      <span id="sidebarUser"></span>
+      <small id="sidebarRole"></small>
+    </div>
+  </div>
+ <nav class="sidebar-nav">
+  <div class="nav-section-label">Main</div>
+  <a class="nav-item" data-page="dashboard"><i class="fas fa-gauge-high"></i> Dashboard</a>
+  <a class="nav-item" data-page="live"><i class="fas fa-bolt"></i> Live Usage</a>
+  <a class="nav-item" data-page="consumption"><i class="fas fa-chart-line"></i> Consumption Trend</a>
+
+  <div class="nav-section-label">Analysis</div>
+  <a class="nav-item" data-page="forecast"><i class="fas fa-brain"></i> ML Forecast</a>
+  <a class="nav-item" data-page="lstm_dashboard"><i class="fas fa-wave-square"></i> LSTM Dashboard</a>
+  <a class="nav-item" data-page="ai_assistant"><i class="fas fa-robot"></i> AI Assistant</a>
+  <a class="nav-item" data-page="anomalies"><i class="fas fa-triangle-exclamation"></i> Anomalies</a>
+
+  <div class="nav-section-label">Blocks</div>
+  <a class="nav-item" data-page="block_gh"><i class="fas fa-venus"></i> Block GH</a>
+  <a class="nav-item" data-page="block_bh"><i class="fas fa-mars"></i> Block BH</a>
+  <a class="nav-item" data-page="block_ab1"><i class="fas fa-building-columns"></i> Block AB1</a>
+  <a class="nav-item" data-page="block_ab2"><i class="fas fa-building"></i> Block AB2</a>
+  <a class="nav-item" data-page="block_adm"><i class="fas fa-landmark"></i> Block ADMIN</a>
+
+  <div class="nav-section-label">Account</div>
+  <a class="nav-item" data-page="switch_user"><i class="fas fa-users-gear"></i> User Management</a>
+</nav>
+  <div class="sidebar-bottom">
+    <a class="nav-item danger" id="logoutBtn"><i class="fas fa-right-from-bracket"></i> Sign Out</a>
+  </div>
+</aside>
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left"><h2>UPLOAD METER DATA</h2><p>CSV format: date, block, room, appliance, power_watts, duration_hours, energy_kwh, temperature_c, day_of_week, is_weekend</p></div>
+  </div>
+  <p class="section-title">Upload CSV</p>
+  <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileIn').click()">
+    <input type="file" id="fileIn" accept=".csv" style="display:none" onchange="handleFile(this.files[0])"/>
+    <div class="drop-icon"><i class="fas fa-cloud-arrow-up"></i></div>
+    <div style="font-size:0.85rem;color:var(--accent2);margin-bottom:4px">Click or drag &amp; drop your CSV file</div>
+    <div style="font-size:0.72rem;color:var(--text3)">Accepted: .csv &middot; Max 10MB</div>
+  </div>
+  <div id="fileInfo" style="margin-top:1rem;display:none" class="card">
+    <div class="card-label"><i class="fas fa-file-csv"></i> File Loaded</div>
+    <div id="fileName" style="color:var(--accent);font-size:0.9rem;margin-bottom:4px"></div>
+    <div id="fileStats" style="font-size:0.72rem;color:var(--text3)"></div>
+    <button class="btn btn-full" style="margin-top:10px" onclick="processFile()"><i class="fas fa-gears"></i> Process &amp; Load Data</button>
+  </div>
+  <div id="processMsg" style="margin-top:1rem;font-size:0.78rem;color:var(--accent2)"></div>
+  <p class="section-title" style="margin-top:1.5rem">Required CSV Columns</p>
+  <div class="card">
+    <table class="data-table">
+      <thead><tr><th>Column</th><th>Type</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td>date</td><td style="color:var(--text3)">YYYY-MM-DD</td><td style="color:var(--accent2)">2025-01-06</td></tr>
+        <tr><td>block</td><td style="color:var(--text3)">string</td><td style="color:var(--accent2)">G-H, B-H, AB1, AB2, ADMIN</td></tr>
+        <tr><td>room</td><td style="color:var(--text3)">string</td><td style="color:var(--accent2)">GH101, LectureHall</td></tr>
+        <tr><td>appliance</td><td style="color:var(--text3)">string</td><td style="color:var(--accent2)">AC, Fan, Geyser</td></tr>
+        <tr><td>power_watts</td><td style="color:var(--text3)">number</td><td style="color:var(--accent2)">2000</td></tr>
+        <tr><td>duration_hours</td><td style="color:var(--text3)">number</td><td style="color:var(--accent2)">9.0</td></tr>
+        <tr><td>energy_kwh</td><td style="color:var(--text3)">number</td><td style="color:var(--accent2)">18.0</td></tr>
+        <tr><td>temperature_c</td><td style="color:var(--text3)">number</td><td style="color:var(--accent2)">23.1</td></tr>
+        <tr><td>day_of_week</td><td style="color:var(--text3)">string</td><td style="color:var(--accent2)">Monday</td></tr>
+        <tr><td>is_weekend</td><td style="color:var(--text3)">Yes/No</td><td style="color:var(--accent2)">No</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+<script src="../js/shared.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  initSidebar('upload');
+
+  if (!isAdmin()) {
+    document.querySelector('.main').innerHTML = `
+      <div class="topbar">
+        <div class="topbar-left">
+          <h2><i class="fas fa-lock" style="color:var(--danger);margin-right:8px"></i>ACCESS RESTRICTED</h2>
+          <p>Admin role required to upload data</p>
+        </div>
+      </div>
+      <div class="card" style="max-width:520px;margin-top:1rem;border-color:var(--danger);background:rgba(255,51,85,0.04)">
+        <div class="card-label" style="color:var(--danger)"><i class="fas fa-shield-halved"></i> Viewer Account</div>
+        <p style="font-size:0.82rem;color:var(--text3);margin-top:10px;line-height:1.8">
+          Your account has <strong style="color:#0099cc">View Only</strong> access.<br>
+          Uploading meter data requires an <strong style="color:var(--accent2)">Admin</strong> account.<br><br>
+          Contact your administrator to upgrade your role.
+        </p>
+        <button class="btn btn-full" style="margin-top:14px;border-color:var(--accent3)" onclick="navigate('dashboard')">
+          <i class="fas fa-gauge-high"></i> &nbsp;Back to Dashboard
+        </button>
+      </div>`;
+    return;
+  }
+  const dz = document.getElementById('dropZone');
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+  dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('over'); handleFile(e.dataTransfer.files[0]); });
+});
+
+let loadedFile = null;
+function handleFile(file) {
+  if (!file || !file.name.endsWith('.csv')) { alert('Please upload a .csv file'); return; }
+  loadedFile = file;
+  document.getElementById('fileName').textContent = '? ' + file.name;
+  document.getElementById('fileStats').textContent = 'Size: ' + (file.size/1024).toFixed(1) + ' KB';
+  document.getElementById('fileInfo').style.display = 'block';
+}
+
+function processFile() {
+  if (!loadedFile) return;
+  document.getElementById('processMsg').textContent = '? Processing...';
+  setTimeout(() => {
+    document.getElementById('processMsg').textContent = '? File processed successfully. Data loaded into dashboard. (Connect to Python backend to parse real data.)';
+  }, 1500);
+}
+</script>
+</body></html>
