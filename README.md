@@ -1,8 +1,8 @@
 # 🌩️ WattWise – Energy Intelligence Dashboard
 
-**WattWise** is a state-of-the-art, full-stack energy monitoring and forecasting platform designed for multi-block environments. It combines real-time data ingestion, hybrid AI forecasting (LSTM + XGBoost), and a secure, E2EE dataset management system — all served through a high-performance, single-origin architecture.
+**WattWise [2.0]** is a state-of-the-art, full-stack energy monitoring and forecasting platform designed for multi-block environments. It combines real-time data ingestion, hybrid AI forecasting (LSTM + XGBoost), and a secure, E2EE dataset management system — all served through a high-performance, single-origin architecture.
 
-Built for **Watt Wise [1.0]** made for **FossHack 2026**, WattWise focuses on data security, scalability, and intelligent insights.
+**Watt Wise [1.0]** made for **FossHack 2026**, WattWise focuses on data security, scalability, and intelligent insights.
 
 ---
 
@@ -27,7 +27,6 @@ WattWise/
 │   └── wecomepage/         # Landing experience (welcome.html)
 ├── read-this/              # Detailed guides & documentation
 ├── run.bat                 # One-click Windows startup script
-├── run.py                  # Backend automation script (cross-platform)
 └── README.md               # Overview & Portal
 ```
 
@@ -43,12 +42,13 @@ WattWise/
 
 ## 👥 Team Members
 
-- **Samridhi Parashar** – Full Stack Developer, AI Integration & Forecasting
-- **Aaryamann Kapoor** – Backend Developer, Database Design & API Security
-- **Kunal Bhatia** – Frontend Developer & Data Visualization
-- **Dimpy Singh** – Full Stack Developer
+- **Samridhi Parashar**
+- **Saksham Parashar**
+
+
 
 ---
 
-Made with ?? for **Watt Wise [1.0]** made for **FossHack 2026**.
+ **Watt Wise [1.0]** made for **FossHack 2026**.
+**Watt Wise [2.0]** made for ** The world **.
 Sustainable energy management for a smarter environment.
