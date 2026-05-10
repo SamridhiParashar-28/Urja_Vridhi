@@ -50,5 +50,5 @@ WattWise/
 ---
 
  **Watt Wise [1.0]** made for **FossHack 2026**.
-**Watt Wise [2.0]** made for ** The world **.
+**Watt Wise [2.0]** made for
 Sustainable energy management for a smarter environment.
