@@ -38,7 +38,7 @@ const THEME_KEY = 'ww_theme';
 
 function initTheme() {
   // Read theme from localStorage (shared with welcome page via 'ww_theme' key)
-  const saved = localStorage.getItem(THEME_KEY) || 'light';
+  const saved = localStorage.getItem(THEME_KEY) || 'dark';
   document.documentElement.setAttribute('data-theme', saved);
 }
 initTheme(); // run immediately to prevent flash

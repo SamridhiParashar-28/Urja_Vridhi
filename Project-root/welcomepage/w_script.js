@@ -32,7 +32,7 @@ setInterval(drawMatrix, 60);
 const THEME_KEY = 'ww_theme';
 
 function initTheme() {
-  const saved = localStorage.getItem(THEME_KEY) || 'light';
+  const saved = localStorage.getItem(THEME_KEY) || 'dark';
   document.documentElement.setAttribute('data-theme', saved);
   updateThemeIcon(saved);
 }
