@@ -171,7 +171,7 @@
   <div class="topbar">
     <div class="topbar-left">
       <h2>AI ENERGY ASSISTANT</h2>
-      <p>Powered by Claude · full campus context · secure backend proxy · multi-turn chat</p>
+      <p>Powered by Gemini · full campus context · secure backend proxy · multi-turn chat</p>
     </div>
     <div class="topbar-right">
       <span><span class="status-dot"></span>AI Online</span>
@@ -306,7 +306,7 @@ async function sendMessage() {
   }
 
   try {
-    const res = await fetch('http://localhost:5000/ai/chat', {
+    const res = await fetch('/ai/chat', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body:    JSON.stringify({ messages: history })

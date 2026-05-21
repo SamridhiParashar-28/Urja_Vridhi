@@ -1,10 +1,22 @@
 @echo off
 setlocal
-cd /d %~dp0
+cd /d "%~dp0"
 
 echo ====================================
 echo  Watt-Wise Startup Script
 echo ====================================
+
+echo [*] Checking Arduino connection...
+set ESP_IP=10.205.143.142
+ping -n 1 -w 1000 %ESP_IP% > nul
+if %errorlevel% equ 0 (
+    echo [+] Arduino detected at %ESP_IP%
+    echo [*] Starting Hardware Monitor...
+    start "Hardware Monitor" cmd /c "cd Project-root && python hardware_monitor.py"
+) else (
+    echo [-] Arduino NOT detected at %ESP_IP%. Hardware Monitor will not auto-start.
+    echo [-] Please check power and Wi-Fi if you intend to use live hardware.
+)
 
 echo [*] Checking backend dependencies...
 cd Project-root\backend

@@ -234,7 +234,11 @@ const BLOCK_COLORS = {
   'B-H':   '#00ff41',
   'AB1':   '#00aaff',
   'AB2':   '#ffaa00',
-  'ADMIN': '#ff6432'
+  'ADMIN': '#ff6432',
+  'Device 1': '#ff5252',
+  'Device 2': '#29d9c2',
+  'Device 3': '#f5c518',
+  'Device 4': '#7c4dff'
 };
 
 function getBlockColor(blockKey) {

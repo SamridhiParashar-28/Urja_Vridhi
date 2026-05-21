@@ -11,6 +11,8 @@ if (!fs.existsSync(dataDir)) {
 // Support remote execution via ENV for the db path, otherwise fallback to local data/database.sqlite
 const dbPath = process.env.DB_PATH || path.join(dataDir, 'database.sqlite');
 const db = new DatabaseSync(dbPath);
+db.exec('PRAGMA busy_timeout = 5000;');
+db.exec('PRAGMA journal_mode = WAL;');
 
 // Transaction polyfill for node:sqlite
 db.transaction = function(cb) {
