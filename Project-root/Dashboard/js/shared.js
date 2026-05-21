@@ -150,7 +150,9 @@ function _deepCopyWWSample() {
 }
 const WW = _deepCopyWWSample();
 
-const API_BASE_SHARED = 'http://localhost:5000';
+const API_BASE_SHARED = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5000'
+  : 'https://urjavridhi-production.up.railway.app'; // <-- PASTE YOUR RAILWAY URL HERE
 
 /**
  * Fetches decrypted entries for the active dataset from the backend

@@ -41,8 +41,12 @@ if (prefill) {
     submitBtn.disabled    = true;
     submitBtn.textContent = "Signing in…";
 
+    const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+      ? 'http://localhost:5000' 
+      : 'https://urjavridhi-production.up.railway.app'; // <-- PASTE YOUR RAILWAY URL HERE
+
     try {
-      const res  = await fetch("/login", {
+      const res  = await fetch(`${API_BASE}/login`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ username, password })

@@ -42,8 +42,12 @@ document.addEventListener("DOMContentLoaded", () => {
     submitBtn.textContent = "Creating account…";
 
     try {
+      const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+        ? 'http://localhost:5000' 
+        : 'https://urjavridhi-production.up.railway.app'; // <-- PASTE YOUR RAILWAY URL HERE
+
       // Step 1: Register
-      const regRes = await fetch("/register", {
+      const regRes = await fetch(`${API_BASE}/register`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ username, password: passValue }),
