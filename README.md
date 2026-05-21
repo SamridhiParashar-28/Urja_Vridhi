@@ -1,6 +1,6 @@
-# 🌩️ WattWise – Energy Intelligence Dashboard
+# 🌩️ Urja Vridhi – Energy Intelligence Dashboard
 
-**WattWise [2.0]** is a state-of-the-art, full-stack energy monitoring and forecasting platform designed for multi-block environments. It combines real-time data ingestion, hybrid AI forecasting (LSTM + XGBoost), and a secure, E2EE dataset management system — all served through a high-performance, single-origin architecture.
+**Urja Vridhi** is a state-of-the-art, full-stack energy monitoring and forecasting platform designed for multi-block environments. It combines real-time data ingestion, hybrid AI forecasting (LSTM + XGBoost), and a secure, E2EE dataset management system — all served through a high-performance, single-origin architecture.
 
 **Watt Wise [1.0]** made for **FossHack 2026**, WattWise focuses on data security, scalability, and intelligent insights.
 
@@ -50,5 +50,5 @@ WattWise/
 ---
 
  **Watt Wise [1.0]** made for **FossHack 2026**.
-**Watt Wise [2.0]** made for
+**Urja Vridhi** made for
 Sustainable energy management for a smarter environment.
