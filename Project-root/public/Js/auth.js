@@ -42,7 +42,7 @@ if (prefill) {
     submitBtn.textContent = "Signing in…";
 
     try {
-      const res  = await fetch("http://localhost:5000/login", {
+      const res  = await fetch("/login", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ username, password })
@@ -64,7 +64,7 @@ if (prefill) {
         // dashboard.html is: Watt-Wise/Project-root/Dashboard/dashboard.html
         // From public/ → go up one level (..) → into Dashboard/
         setTimeout(() => {
-          window.location.replace("/Dashboard/dashboard.html");
+          window.location.replace("../Dashboard/dashboard.html");
         }, 1000);
 
       } else {
