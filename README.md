@@ -44,6 +44,7 @@ WattWise/
 
 - **Samridhi Parashar**
 - **Saksham Parashar**
+- **Aaryamann Kapoor**
 
 
 
