@@ -52,5 +52,5 @@ WattWise/
 
 [**Watt Wise [1.0]**](https://github.com/SamridhiParashar-28/Watt-Wise) made for **FossHack 2026**.
 
-**Urja Vridhi** made for
+[**Urja Vridhi**] (https://github.com/SamridhiParashar-28/Urja_Vridhi) made for
 Sustainable energy management for a smarter environment.
