@@ -8,11 +8,11 @@
 
 ## 📂 Quick Links
 
-To get started with the project, please refer to the documents in the [read-this/](./read-this/) folder:
+To get started with the project, please refer to the documents in the [documentation/read-this/](./documentation/read-this/) folder:
 
-- 📖 [**Project Documentation**](./read-this/documentation.md) — Features, Tech Stack, and Planning.
-- 🛠️ [**Setup Instructions**](./read-this/setup.md) — Prerequisites and Installation.
-- 🚦 [**Usage Guide**](./read-this/usage.md) — How to run and test the platform.
+- 📖 [**Project Documentation**](./documentation/read-this/documentation.md) — Features, Tech Stack, and Planning.
+- 🛠️ [**Setup Instructions**](./documentation/read-this/setup.md) — Prerequisites and Installation.
+- 🚦 [**Usage Guide**](./documentation/read-this/usage.md) — How to run and test the platform.
 
 ---
 
@@ -25,7 +25,7 @@ WattWise/
 │   ├── Dashboard/          # Core analytics & management pages
 │   ├── public/             # Authentication (Login/Register)
 │   └── wecomepage/         # Landing experience (welcome.html)
-├── read-this/              # Detailed guides & documentation
+├── documentation/          # Detailed guides & documentation
 ├── run.bat                 # One-click Windows startup script
 └── README.md               # Overview & Portal
 ```
