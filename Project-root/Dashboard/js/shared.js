@@ -298,6 +298,73 @@ function isAdmin() {
   return localStorage.getItem('role') === 'admin';
 }
 
+// ── Sidebar Collapse ──────────────────────────────────────
+const SIDEBAR_COLLAPSED_KEY = 'ww_sidebar_collapsed';
+
+function _applySidebarState(collapsed) {
+  const sidebar = document.querySelector('.sidebar');
+  const main    = document.querySelector('.main');
+  if (!sidebar) return;
+  sidebar.classList.toggle('collapsed', collapsed);
+  if (main) main.classList.toggle('sidebar-collapsed', collapsed);
+}
+
+function _initSidebarToggle() {
+  const sidebar = document.querySelector('.sidebar');
+  if (!sidebar) return;
+
+  // Wrap existing .sidebar-logo content in new header-row structure (if not already done)
+  if (!sidebar.querySelector('.sidebar-header-row')) {
+    const logoEl = sidebar.querySelector('.sidebar-logo');
+    if (logoEl) {
+      // Build the new header row
+      const headerRow = document.createElement('div');
+      headerRow.className = 'sidebar-header-row';
+
+      // Move logo content into a text wrapper
+      const logoText = document.createElement('div');
+      logoText.className = 'sidebar-logo-text';
+      logoText.innerHTML = logoEl.innerHTML;
+
+      // Create toggle button
+      const toggleBtn = document.createElement('button');
+      toggleBtn.className = 'sidebar-toggle-btn';
+      toggleBtn.setAttribute('title', 'Toggle sidebar');
+      toggleBtn.setAttribute('aria-label', 'Toggle sidebar');
+      toggleBtn.innerHTML = '<i class="fas fa-angles-left"></i>';
+
+      headerRow.appendChild(logoText);
+      headerRow.appendChild(toggleBtn);
+
+      // Replace old logo element with new header row
+      logoEl.replaceWith(headerRow);
+
+      // Wire up toggle
+      toggleBtn.addEventListener('click', () => {
+        const isCollapsed = sidebar.classList.contains('collapsed');
+        const next = !isCollapsed;
+        _applySidebarState(next);
+        localStorage.setItem(SIDEBAR_COLLAPSED_KEY, next ? '1' : '0');
+      });
+    }
+  }
+
+  // Apply persisted state immediately (no animation flash)
+  const saved = localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === '1';
+  // Briefly disable transition so initial state is instant
+  sidebar.style.transition = 'none';
+  const main = document.querySelector('.main');
+  if (main) main.style.transition = 'none';
+  _applySidebarState(saved);
+  // Re-enable transition after a frame
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      sidebar.style.transition = '';
+      if (main) main.style.transition = '';
+    });
+  });
+}
+
 function initSidebar(activeId) {
   if (!authGuard()) return;
 
@@ -329,7 +396,8 @@ function initSidebar(activeId) {
     const link = document.createElement('a');
     link.className = 'nav-item';
     link.setAttribute('data-page', 'datasets');
-    link.innerHTML = '<i class="fas fa-database"></i> Dataset Manager';
+    link.setAttribute('data-tooltip', 'Datasets');
+    link.innerHTML = '<i class="fas fa-database"></i><span class="nav-label"> Dataset Manager</span>';
     mainLabel.after(link);
   }
 
@@ -339,23 +407,49 @@ function initSidebar(activeId) {
     const link = document.createElement('a');
     link.className = 'nav-item';
     link.setAttribute('data-page', 'blocks_manager');
-    link.innerHTML = '<i class="fas fa-cubes"></i> Blocks Manager';
+    link.setAttribute('data-tooltip', 'Blocks Manager');
+    link.innerHTML = '<i class="fas fa-cubes"></i><span class="nav-label"> Blocks Manager</span>';
     blocksLabel.after(link);
   }
 
+  // Wrap nav-item text in .nav-label spans for all existing items (so they hide cleanly)
   document.querySelectorAll('.nav-item[data-page]').forEach(el => {
+    // Add data-tooltip from text content if not present
+    if (!el.getAttribute('data-tooltip')) {
+      el.setAttribute('data-tooltip', el.textContent.trim());
+    }
+    // Wrap text nodes directly inside the nav-item in a .nav-label span
+    el.childNodes.forEach(node => {
+      if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+        const span = document.createElement('span');
+        span.className = 'nav-label';
+        span.textContent = node.textContent;
+        node.replaceWith(span);
+      }
+    });
+
     el.classList.toggle('active', el.dataset.page === activeId);
     el.addEventListener('click', (e) => {
-      // Don't navigate if already on this page
       if (el.dataset.page === activeId) { e.preventDefault(); return; }
       navigate(el.dataset.page);
     });
   });
 
+  // Also handle logout button label wrapping
   const logoutBtn = document.getElementById('logoutBtn');
   if (logoutBtn) {
+    if (!logoutBtn.getAttribute('data-tooltip')) {
+      logoutBtn.setAttribute('data-tooltip', 'Sign Out');
+    }
+    logoutBtn.childNodes.forEach(node => {
+      if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+        const span = document.createElement('span');
+        span.className = 'nav-label';
+        span.textContent = node.textContent;
+        node.replaceWith(span);
+      }
+    });
     logoutBtn.addEventListener('click', () => {
-      // Preserve theme across logout so welcome page keeps user's theme preference
       const savedTheme = localStorage.getItem(THEME_KEY);
       localStorage.clear();
       if (savedTheme) localStorage.setItem(THEME_KEY, savedTheme);
@@ -363,7 +457,7 @@ function initSidebar(activeId) {
     });
   }
 
-  // Inject theme toggle button into topbar-right (beside System Online)
+  // Inject theme toggle button into topbar-right
   const topbarRight = document.querySelector('.topbar-right');
   if (topbarRight && !document.getElementById('themeToggleBtn')) {
     const isLight = document.documentElement.getAttribute('data-theme') === 'light';
@@ -379,6 +473,9 @@ function initSidebar(activeId) {
 
   // Inject Active Dataset Name into Topbar Left
   updateActiveDatasetDisplay();
+
+  // Init collapsible sidebar last (after DOM is ready)
+  _initSidebarToggle();
 }
 
 function updateActiveDatasetDisplay() {
